@@ -1,0 +1,23 @@
+{
+  "name": "cits3403-project",
+  "version": "1.0.0",
+  "description": "hi 🐱 -- kush push test p",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flamedphoenix/CITS3403-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/flamedphoenix/CITS3403-project/issues"
+  },
+  "homepage": "https://github.com/flamedphoenix/CITS3403-project#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.2.2"
+  }
+}
