@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}RateRace — Log In{% endblock %}
+
+{% block content %}
+<section class="py-20 px-6 flex justify-center">
+  <div class="w-full max-w-sm">
+
+    <h2 class="text-2xl font-extrabold uppercase tracking-widest text-amber-50 mb-8 text-center">Log In</h2>
+
+    <form method="POST" action="{{ url_for('main.login') }}" class="flex flex-col gap-4">
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1">Username</label>
+        <input type="text" name="username" required
+          class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 outline-none px-4 py-3 text-amber-50 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1">Password</label>
+        <input type="password" name="password" required
+          class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 outline-none px-4 py-3 text-amber-50 text-sm" />
+      </div>
+      <button type="submit"
+        class="bg-amber-400 text-black px-6 py-3 font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 mt-2">
+        Log In
+      </button>
+    </form>
+
+    <p class="text-zinc-500 text-xs text-center mt-6">
+      No account?
+      <a href="{{ url_for('main.register') }}" class="text-amber-400 hover:underline">Sign up free</a>
+    </p>
+
+  </div>
+</section>
+{% endblock %}

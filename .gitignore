@@ -1,3 +1,19 @@
 node_modules/
 client/static/css/output.css
 
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+
+# Flask
+instance/
+.flaskenv
+
+# OS
+.DS_Store
+
