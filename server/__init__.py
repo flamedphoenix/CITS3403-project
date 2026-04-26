@@ -11,7 +11,7 @@ def create_app():
 
     app.secret_key = 'dev'
 
-    from app.routes import main
+    from server.routes import main
     app.register_blueprint(main)
 
     return app
