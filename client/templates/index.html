@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}RateRace — Which Movie Rates Higher?{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Courier Prime', monospace; }
+  h1, h2, h3, .retro-title { font-family: 'Special Elite', cursive; }
+  .shadow-retro { box-shadow: 4px 4px 0px #b45309; }
+  .shadow-retro:hover { box-shadow: 6px 6px 0px #b45309; }
+  .text-shadow-retro { text-shadow: 2px 2px 0px #b45309; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <!-- Hero Section -->
+  <section class="bg-zinc-950 py-20 px-6 text-center border-b-2 border-amber-400">
+    <div class="max-w-3xl mx-auto">
+
+      <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-6">
+        ★ &nbsp; Now Showing &nbsp; ★
+      </p>
+
+      <h1 class="text-6xl font-extrabold text-amber-50 uppercase tracking-tight leading-none mb-2 text-shadow-retro">
+        Which Movie
+      </h1>
+      <h1 class="text-6xl font-extrabold text-amber-400 uppercase tracking-tight leading-none mb-8 text-shadow-retro">
+        Rates Higher?
+      </h1>
+
+      <p class="text-zinc-400 text-sm mb-10 max-w-md mx-auto leading-relaxed">
+        Two films. One question. Guess which has the higher IMDb score and climb the ranks.
+      </p>
+
+      <div class="flex justify-center gap-4 flex-wrap">
+        <a href="{{ url_for('main.game') }}" class="bg-amber-400 text-black px-10 py-4 font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 shadow-retro">
+          ▶ &nbsp; Play Now
+        </a>
+        <a href="{{ url_for('main.register') }}" class="text-amber-400 px-10 py-4 font-extrabold uppercase tracking-widest text-xs border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition shadow-retro">
+          Sign Up Free
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Movie Showdown Preview -->
+  <section class="bg-black py-16 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+
+      <p class="text-zinc-500 uppercase tracking-widest text-xs mb-10 font-bold">
+        — Feature Presentation —
+      </p>
+
+      <div class="flex items-center justify-center gap-8 flex-wrap">
+
+        <!-- Movie A -->
+        <div class="border-2 border-zinc-700 hover:border-amber-400 transition cursor-pointer w-44 flex flex-col items-center shadow-retro">
+          <div class="w-full h-56 bg-zinc-900 flex items-center justify-center text-6xl">🎬</div>
+          <div class="p-4 w-full text-center border-t-2 border-zinc-700">
+            <p class="text-amber-50 font-bold text-xs uppercase tracking-wide mb-1">The Godfather</p>
+            <p class="text-zinc-500 text-xs">Click to guess</p>
+          </div>
+        </div>
+
+        <!-- VS -->
+        <div class="flex flex-col items-center gap-2">
+          <span class="text-amber-400 font-extrabold text-4xl uppercase tracking-widest">VS</span>
+          <span class="text-zinc-600 text-xs uppercase tracking-widest">IMDb Score</span>
+        </div>
+
+        <!-- Movie B -->
+        <div class="border-2 border-zinc-700 hover:border-amber-400 transition cursor-pointer w-44 flex flex-col items-center shadow-retro">
+          <div class="w-full h-56 bg-zinc-900 flex items-center justify-center text-6xl">🎥</div>
+          <div class="p-4 w-full text-center border-t-2 border-zinc-700">
+            <p class="text-amber-50 font-bold text-xs uppercase tracking-wide mb-1">Pulp Fiction</p>
+            <p class="text-zinc-500 text-xs">Click to guess</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- How To Play -->
+  <section class="bg-zinc-950 py-16 px-6 border-t-2 border-zinc-800">
+    <div class="max-w-4xl mx-auto">
+
+      <p class="text-amber-400 uppercase tracking-widest text-xs font-bold text-center mb-10">
+        ★ &nbsp; How To Play &nbsp; ★
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="border-2 border-zinc-700 p-6 text-center hover:border-amber-400 transition shadow-retro">
+          <div class="text-amber-400 text-3xl font-extrabold mb-3">01</div>
+          <h3 class="text-amber-50 font-bold uppercase tracking-widest text-xs mb-3">Two Films Appear</h3>
+          <p class="text-zinc-500 text-xs leading-relaxed">Each round puts two movies head to head on the silver screen.</p>
+        </div>
+
+        <div class="border-2 border-zinc-700 p-6 text-center hover:border-amber-400 transition shadow-retro">
+          <div class="text-amber-400 text-3xl font-extrabold mb-3">02</div>
+          <h3 class="text-amber-50 font-bold uppercase tracking-widest text-xs mb-3">Pick the Higher Rated</h3>
+          <p class="text-zinc-500 text-xs leading-relaxed">Choose the film you think has the higher IMDb score.</p>
+        </div>
+
+        <div class="border-2 border-zinc-700 p-6 text-center hover:border-amber-400 transition shadow-retro">
+          <div class="text-amber-400 text-3xl font-extrabold mb-3">03</div>
+          <h3 class="text-amber-50 font-bold uppercase tracking-widest text-xs mb-3">Climb the Rankings</h3>
+          <p class="text-zinc-500 text-xs leading-relaxed">Score points for each correct guess and top the leaderboard.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+{% endblock %}
