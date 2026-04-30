@@ -13,6 +13,7 @@ __pycache__/
 # Flask
 instance/
 .flaskenv
+*.db
 
 # OS
 .DS_Store
