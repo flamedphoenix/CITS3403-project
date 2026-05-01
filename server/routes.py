@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
+from flask_login import login_user, current_user, logout_user
 from server.forms import LoginForm, RegistrationForm
 from server.models import User
 from server import db
@@ -24,12 +25,16 @@ def scoreboard():
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
             return redirect(url_for('main.login'))
+        login_user(user, remember=form.remember_me.data)
         flash(f'Successfully logged in as {form.username.data}')
         return redirect(url_for('main.index'))
     return render_template('login.html', form=form)
@@ -51,4 +56,5 @@ def register():
 
 @main.route('/logout')
 def logout():
+    logout_user()
     return redirect(url_for('main.index'))
