@@ -42,12 +42,16 @@ def login():
 
 @main.route('/register', methods=['GET', 'POST']) 
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
     form = RegistrationForm()
     if form.validate_on_submit():
         user=User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        login_user(user)
         
         flash(f'Registration requested for user {form.username.data}')
         return redirect(url_for('main.index'))
