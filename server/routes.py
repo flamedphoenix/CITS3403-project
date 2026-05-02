@@ -47,7 +47,22 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        user=User(username=form.username.data, email=form.email.data)
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        existing_email = User.query.filter_by(email=form.email.data).first()
+
+        if existing_user and existing_email:
+            flash('Username and email are already in use')
+            return redirect(url_for('main.register'))
+
+        if existing_user:
+            flash('Username already taken')
+            return redirect(url_for('main.register'))
+
+        if existing_email:
+            flash('Email already registered')
+            return redirect(url_for('main.register'))
+        
+        user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
