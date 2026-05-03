@@ -2,12 +2,166 @@
 
 {% block title %}RateRace — Play{% endblock %}
 
-{% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Courier Prime', monospace; }
+  h1, h2, h3 { font-family: 'Special Elite', cursive; }
+  .shadow-retro { box-shadow: 4px 4px 0px #b45309; }
+  .text-shadow-retro { text-shadow: 2px 2px 0px #b45309; }
+  #timer-bar { transition: width 1s linear; }
+</style>
 {% endblock %}
 
 {% block content %}
-<section class="py-20 px-6 text-center">
-  <p class="text-amber-400 uppercase tracking-widest text-xs font-bold">Game coming soon</p>
+<section class="min-h-[calc(100vh-150px)] bg-zinc-950 flex flex-col items-center justify-center px-6 py-10">
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="text-center w-full" style="max-width: 900px;">
+    <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-6">★ &nbsp; Now Playing &nbsp; ★</p>
+    <h1 style="font-size: 6rem; line-height: 1;" class="font-extrabold text-amber-400 uppercase tracking-tight text-shadow-retro">Rate</h1>
+    <h1 style="font-size: 6rem; line-height: 1;" class="font-extrabold text-amber-50 uppercase tracking-tight text-shadow-retro mb-10">Race</h1>
+    <div class="flex justify-center gap-6 mb-12 text-zinc-500 text-xs uppercase tracking-widest font-bold">
+      <span>10 Rounds</span>
+      <span class="text-amber-400">★</span>
+      <span>60 Seconds</span>
+      <span class="text-amber-400">★</span>
+      <span>Beat the Clock</span>
+    </div>
+    <div class="flex justify-center" style="margin-top: 2.5rem;">
+      <button onclick="startGame()"
+        style="padding: 1rem 3.5rem 1rem 2.5rem;"
+        class="flex items-center justify-center gap-3 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-sm hover:bg-amber-300 transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 shadow-retro">
+        <span>▶</span><span>Start Game</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="screen-game" class="hidden w-full" style="max-width: 1100px;">
+
+    <!-- Timer Bar -->
+    <div class="w-full bg-zinc-800 border-2 border-zinc-700 mb-5">
+      <div id="timer-bar" class="h-3 bg-amber-400" style="width: 100%"></div>
+    </div>
+
+    <!-- HUD -->
+    <div class="flex justify-between items-center mb-8 px-1">
+      <span class="text-zinc-400 text-xs uppercase tracking-widest font-bold">
+        Round <span id="round-display" class="text-amber-400">1</span>/10
+      </span>
+      <span id="timer-display" class="text-amber-400 font-extrabold text-2xl">60</span>
+      <span class="text-zinc-400 text-xs uppercase tracking-widest font-bold">
+        Score: <span id="score-display" class="text-amber-400">0</span>
+      </span>
+    </div>
+
+    <!-- Question -->
+    <p class="text-center text-zinc-500 uppercase tracking-widest text-xs font-bold mb-8">
+      — Which film has the higher rating? —
+    </p>
+
+    <!-- Movie Cards -->
+    <div class="flex items-stretch justify-center gap-6 flex-wrap">
+
+      <!-- Movie A -->
+      <div id="card-a" onclick="pick('a')"
+        class="border-2 border-zinc-700 hover:border-amber-400 transition cursor-pointer flex flex-col shadow-retro group" style="width: 340px;">
+        <div class="w-full bg-zinc-900 flex flex-col items-center justify-center border-b-2 border-zinc-700 gap-2" style="height: 400px;">
+          <span class="text-6xl">🎬</span>
+        </div>
+        <div class="p-4 text-center bg-black flex-1 flex flex-col justify-between">
+          <div>
+            <p id="title-a" class="text-amber-50 font-bold text-sm uppercase tracking-wide mb-1"></p>
+            <p id="year-a" class="text-zinc-500 text-xs mb-3"></p>
+            <div id="rating-a" class="hidden text-amber-400 font-extrabold text-2xl text-shadow-retro mb-2">
+              ★ <span id="rating-val-a"></span>
+            </div>
+          </div>
+          <p id="hint-a" class="text-zinc-600 text-xs uppercase tracking-widest group-hover:text-amber-400 transition">
+            Click to pick
+          </p>
+        </div>
+      </div>
+
+      <!-- VS -->
+      <div class="flex flex-col items-center justify-center gap-2 shrink-0">
+        <span class="text-amber-400 font-extrabold text-4xl uppercase tracking-widest text-shadow-retro">VS</span>
+        <span class="text-zinc-600 text-xs uppercase tracking-widest">IMDb Rating</span>
+      </div>
+
+      <!-- Movie B -->
+      <div id="card-b" onclick="pick('b')"
+        class="border-2 border-zinc-700 hover:border-amber-400 transition cursor-pointer flex flex-col shadow-retro group" style="width: 340px;">
+        <div class="w-full bg-zinc-900 flex flex-col items-center justify-center border-b-2 border-zinc-700 gap-2" style="height: 400px;">
+          <span class="text-6xl">🎥</span>
+        </div>
+        <div class="p-4 text-center bg-black flex-1 flex flex-col justify-between">
+          <div>
+            <p id="title-b" class="text-amber-50 font-bold text-sm uppercase tracking-wide mb-1"></p>
+            <p id="year-b" class="text-zinc-500 text-xs mb-3"></p>
+            <div id="rating-b" class="hidden text-amber-400 font-extrabold text-2xl text-shadow-retro mb-2">
+              ★ <span id="rating-val-b"></span>
+            </div>
+          </div>
+          <p id="hint-b" class="text-zinc-600 text-xs uppercase tracking-widest group-hover:text-amber-400 transition">
+            Click to pick
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Feedback -->
+    <div id="feedback" class="hidden text-center mt-10">
+      <p id="feedback-text" class="text-2xl font-extrabold uppercase tracking-widest mb-1"></p>
+      <p id="feedback-sub" class="text-zinc-500 text-xs uppercase tracking-widest"></p>
+    </div>
+
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="screen-results" class="hidden text-center w-full" style="max-width: 750px;">
+    <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-4">★ &nbsp; Game Over &nbsp; ★</p>
+    <h2 class="text-5xl font-extrabold text-amber-50 uppercase tracking-tight text-shadow-retro mb-8">Final Score</h2>
+
+    <div class="border-2 border-amber-400 bg-black p-10 mb-6 shadow-retro">
+      <p id="result-score" class="text-amber-400 font-extrabold text-6xl text-shadow-retro mb-1"></p>
+      <p class="text-zinc-600 text-xs uppercase tracking-widest">points</p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-10">
+      <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Correct</p>
+        <p id="result-correct" class="text-amber-400 font-extrabold text-xl"></p>
+      </div>
+      <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Time Left</p>
+        <p id="result-time" class="text-amber-400 font-extrabold text-xl"></p>
+      </div>
+      <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Accuracy</p>
+        <p id="result-accuracy" class="text-amber-400 font-extrabold text-xl"></p>
+      </div>
+    </div>
+
+    <div class="flex justify-center gap-4 flex-wrap">
+      <button onclick="startGame()"
+        style="padding: 0.75rem 2.5rem 0.75rem 1.75rem;"
+        class="flex items-center justify-center gap-2 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 shadow-retro">
+        <span>▶</span><span>Play Again</span>
+      </button>
+      <a href="{{ url_for('main.scoreboard') }}"
+        style="padding: 0.75rem 1.75rem 0.75rem 2.5rem;"
+        class="flex items-center justify-center gap-2 text-amber-400 font-extrabold uppercase tracking-widest text-xs border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition shadow-retro">
+        <span>Leaderboard</span><span>→</span>
+      </a>
+    </div>
+  </div>
+
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
 {% endblock %}

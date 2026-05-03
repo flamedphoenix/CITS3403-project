@@ -24,8 +24,6 @@ def create_app():
     login.init_app(app) 
 
 
-    app.secret_key = 'dev'
-
     from server.routes import main
     app.register_blueprint(main)
 
