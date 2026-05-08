@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
-from flask_login import login_user, current_user, logout_user
+import random
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request
+from flask_login import login_user, current_user, logout_user, login_required
 from server.forms import LoginForm, RegistrationForm
-from server.models import User
+from server.models import User, Movie, Score
 from server import db
 
 
@@ -14,6 +15,7 @@ def index():
 
 
 @main.route('/game')
+@login_required
 def game():
     return render_template('game.html')
 
@@ -77,3 +79,94 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('main.index'))
+
+
+@main.route('/api/game/questions')
+@login_required
+def game_questions():
+    movies = Movie.query.all()
+    if len(movies) < 2:
+        return jsonify({'error': 'Not enough movies in database'}), 500
+
+    random.shuffle(movies)
+    pairs = []
+    used = []
+
+    for movie in movies:
+        if len(pairs) == 10:
+            break
+        partner = next(
+            (m for m in movies if m not in used and m.id != movie.id and m.rating != movie.rating),
+            None
+        )
+        if partner:
+            pairs.append([movie.to_dict(), partner.to_dict()])
+            used.extend([movie, partner])
+
+    if len(pairs) < 10:
+        return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
+
+    return jsonify({'pairs': pairs})
+
+
+@main.route('/api/game/submit', methods=['POST'])
+@login_required
+def game_submit():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    score_value = data.get('score')
+    correct_answers = data.get('correct_answers')
+    time_taken = data.get('time_taken')
+
+    if any(v is None for v in [score_value, correct_answers, time_taken]):
+        return jsonify({'error': 'Missing fields'}), 400
+
+    score = Score(
+        user_id=current_user.id,
+        score=score_value,
+        correct_answers=correct_answers,
+        time_taken=time_taken,
+    )
+    db.session.add(score)
+    db.session.commit()
+
+    best = Score.query.filter_by(user_id=current_user.id).order_by(Score.score.desc()).first()
+
+    user_best_subq = db.session.query(
+        db.func.max(Score.score)
+    ).filter(Score.user_id == User.id).correlate(User).scalar_subquery()
+
+    rank = db.session.query(db.func.count()).filter(
+        user_best_subq > best.score
+    ).scalar() + 1
+
+    return jsonify({'saved': True, 'best_score': best.score, 'rank': rank})
+
+
+@main.route('/api/scores/leaderboard')
+def leaderboard():
+    best_scores = db.session.query(
+        User.username,
+        db.func.max(Score.score).label('best_score'),
+        db.func.min(Score.time_taken).label('best_time'),
+        db.func.count(Score.id).label('games_played'),
+        db.func.round(
+            db.func.avg(Score.correct_answers) * 10, 1
+        ).label('avg_accuracy'),
+    ).join(Score, User.id == Score.user_id).group_by(User.id).order_by(
+        db.text('best_score DESC')
+    ).limit(50).all()
+
+    return jsonify({'leaderboard': [
+        {
+            'rank': i + 1,
+            'username': row.username,
+            'best_score': row.best_score,
+            'best_time': row.best_time,
+            'games_played': row.games_played,
+            'avg_accuracy': f'{row.avg_accuracy}%',
+        }
+        for i, row in enumerate(best_scores)
+    ]})
