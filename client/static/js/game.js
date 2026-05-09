@@ -65,7 +65,6 @@ function startGame() {
   hide('screen-results');
   show('screen-game');
 
-  startTimer();
   loadRound();
 }
 
@@ -175,6 +174,8 @@ function loadRound() {
 
   document.getElementById('round-display').textContent = state.round + 1;
   document.getElementById('score-display').textContent = state.score;
+
+  startTimer();
 }
 
 function pick(choice) {
@@ -254,14 +255,14 @@ function nextRound() {
 function endGame() {
   clearInterval(state.timer);
 
-  const timeBonus = state.timeLeft * 5;
-  state.score += timeBonus;
-
   hide('screen-game');
   show('screen-results');
 
-  document.getElementById('result-score').textContent    = state.score;
-  document.getElementById('result-correct').textContent  = `${state.correct}/10`;
-  document.getElementById('result-time').textContent     = `${state.timeLeft}s`;
-  document.getElementById('result-accuracy').textContent = `${state.correct * 10}%`;
+  const accuracy = Math.round((state.correct / TOTAL_ROUNDS) * 100);
+  const formattedTimeTaken = state.totalTimeTaken.toFixed(1);
+
+  document.getElementById('result-score').textContent = state.score;
+  document.getElementById('result-correct').textContent = `${state.correct}/${TOTAL_ROUNDS}`;
+  document.getElementById('result-time').textContent = `${formattedTimeTaken}s`;
+  document.getElementById('result-accuracy').textContent = `${accuracy}%`;
 }
