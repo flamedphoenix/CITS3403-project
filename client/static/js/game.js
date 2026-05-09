@@ -1,5 +1,6 @@
 const TOTAL_ROUNDS = 10;
-const TOTAL_TIME = 60;
+const ROUND_TIME = 5;
+const TIMER_INTERVAL_MS = 100;
 
 const MOVIES = [
   { title: "The Shawshank Redemption", year: "1994", rating: 9.3 },
@@ -53,7 +54,8 @@ function startGame() {
     round: 0,
     score: 0,
     correct: 0,
-    timeLeft: TOTAL_TIME,
+    roundTimeLeft: ROUND_TIME,
+    totalTimeTaken: 0,
     timer: null,
     pairs: generatePairs(),
     picked: false,
@@ -63,35 +65,87 @@ function startGame() {
   hide('screen-results');
   show('screen-game');
 
-  startTimer();
   loadRound();
 }
 
 function startTimer() {
+  clearInterval(state.timer);
+
+  state.roundTimeLeft = ROUND_TIME;
   updateTimerDisplay();
+
   state.timer = setInterval(() => {
-    state.timeLeft--;
+    state.roundTimeLeft = Math.max(0, state.roundTimeLeft - TIMER_INTERVAL_MS / 1000);
     updateTimerDisplay();
-    if (state.timeLeft <= 0) {
+
+    if (state.roundTimeLeft <= 0) {
       clearInterval(state.timer);
-      endGame();
+      handleTimeout();
     }
-  }, 1000);
+  }, TIMER_INTERVAL_MS);
 }
 
 function updateTimerDisplay() {
-  document.getElementById('timer-display').textContent = state.timeLeft;
-  document.getElementById('timer-bar').style.width = (state.timeLeft / TOTAL_TIME * 100) + '%';
+  const wholeSeconds = Math.ceil(state.roundTimeLeft);
+
+  document.getElementById('timer-display').textContent = wholeSeconds;
+  document.getElementById('timer-bar').style.width = (state.roundTimeLeft / ROUND_TIME * 100) + '%';
 
   const bar = document.getElementById('timer-bar');
   const timerNum = document.getElementById('timer-display');
-  if (state.timeLeft <= 10) {
+
+  if (state.roundTimeLeft <= 1) {
     bar.classList.replace('bg-amber-400', 'bg-red-500');
     timerNum.classList.replace('text-amber-400', 'text-red-400');
   } else {
     bar.classList.replace('bg-red-500', 'bg-amber-400');
     timerNum.classList.replace('text-red-400', 'text-amber-400');
   }
+}
+
+function getTimeBonus(timeTakenThisRound) {
+  if (timeTakenThisRound < 1) return 100;
+  if (timeTakenThisRound < 2) return 80;
+  if (timeTakenThisRound < 3) return 60;
+  if (timeTakenThisRound < 4) return 40;
+  if (timeTakenThisRound < 5) return 20;
+  return 0;
+}
+
+function handleTimeout() {
+  if (state.picked) return;
+
+  state.picked = true;
+  state.totalTimeTaken += ROUND_TIME;
+
+  const [movieA, movieB] = state.pairs[state.round];
+  const correctChoice = movieA.rating >= movieB.rating ? 'a' : 'b';
+  const correctMovie = correctChoice === 'a' ? movieA : movieB;
+
+  document.getElementById('card-a').onclick = null;
+  document.getElementById('card-b').onclick = null;
+
+  document.getElementById('rating-val-a').textContent = movieA.rating.toFixed(1);
+  document.getElementById('rating-val-b').textContent = movieB.rating.toFixed(1);
+  show('rating-a');
+  show('rating-b');
+
+  const correctCard = document.getElementById(`card-${correctChoice}`);
+  correctCard.className = 'border-2 border-green-500 w-52 flex flex-col group';
+  correctCard.style.boxShadow = '4px 4px 0px #15803d';
+
+  const feedbackText = document.getElementById('feedback-text');
+  const feedbackSub = document.getElementById('feedback-sub');
+
+  feedbackText.textContent = 'Time Up!';
+  feedbackText.className = 'text-2xl font-extrabold uppercase tracking-widest text-red-400 mb-1';
+  feedbackSub.textContent = `${correctMovie.title} had the higher rating (${correctMovie.rating})`;
+
+  show('feedback');
+
+  setTimeout(() => {
+    nextRound();
+  }, 2000);
 }
 
 function loadRound() {
@@ -120,6 +174,8 @@ function loadRound() {
 
   document.getElementById('round-display').textContent = state.round + 1;
   document.getElementById('score-display').textContent = state.score;
+
+  startTimer();
 }
 
 function pick(choice) {
@@ -154,11 +210,21 @@ function pick(choice) {
   const feedbackText = document.getElementById('feedback-text');
   const feedbackSub  = document.getElementById('feedback-sub');
 
-  if (isCorrect) {
-    state.correct++;
-    state.score += 100;
-    document.getElementById('score-display').textContent = state.score;
-    feedbackText.textContent = '✓ Correct! +100pts';
+
+const timeTakenThisRound = ROUND_TIME - state.roundTimeLeft;
+state.totalTimeTaken += timeTakenThisRound;
+
+if (isCorrect) {
+  const basePoints = 100;
+  const speedBonus = getTimeBonus(timeTakenThisRound);
+  const roundPoints = basePoints + speedBonus;
+
+  state.correct++;
+  state.score += roundPoints;
+
+  document.getElementById('score-display').textContent = state.score;
+  feedbackText.textContent = `✓ Correct! +${roundPoints}pts`;
+
     feedbackText.className = 'text-2xl font-extrabold uppercase tracking-widest text-green-400 mb-1';
     feedbackSub.textContent = `${movieA.title} (${movieA.rating}) vs ${movieB.title} (${movieB.rating})`;
   } else {
@@ -171,8 +237,8 @@ function pick(choice) {
   show('feedback');
 
   clearInterval(state.timer);
+
   setTimeout(() => {
-    startTimer();
     nextRound();
   }, 2000);
 }
@@ -189,14 +255,14 @@ function nextRound() {
 function endGame() {
   clearInterval(state.timer);
 
-  const timeBonus = state.timeLeft * 5;
-  state.score += timeBonus;
-
   hide('screen-game');
   show('screen-results');
 
-  document.getElementById('result-score').textContent    = state.score;
-  document.getElementById('result-correct').textContent  = `${state.correct}/10`;
-  document.getElementById('result-time').textContent     = `${state.timeLeft}s`;
-  document.getElementById('result-accuracy').textContent = `${state.correct * 10}%`;
+  const accuracy = Math.round((state.correct / TOTAL_ROUNDS) * 100);
+  const formattedTimeTaken = state.totalTimeTaken.toFixed(1);
+
+  document.getElementById('result-score').textContent = state.score;
+  document.getElementById('result-correct').textContent = `${state.correct}/${TOTAL_ROUNDS}`;
+  document.getElementById('result-time').textContent = `${formattedTimeTaken}s`;
+  document.getElementById('result-accuracy').textContent = `${accuracy}%`;
 }
