@@ -111,8 +111,29 @@ def game_questions():
     pairs = get_random_movie_batch(10)
     if not pairs:
         return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
-
     return jsonify({'pairs': pairs})
+
+
+@main.route('/api/game/daily')
+@login_required
+def game_daily():
+    today = date.today()
+    daily_entry = DailyMovieSet.query.filter_by(reset_date=today).first()
+    if not daily_entry:
+        maintain_movie_cache()
+        pairs = get_random_movie_batch(10)
+        if not pairs:
+            return jsonify({'error': 'Database too small for daily mode'}), 500
+            
+        new_set = DailyMovieSet(reset_date=today, movie_json=json.dumps(pairs))
+        db.session.add(new_set)
+        db.session.commit()
+        return jsonify({'pairs': pairs})
+    
+    return jsonify({'pairs': json.loads(daily_entry.movie_json)})
+
+
+
 
 
 @main.route('/api/game/submit', methods=['POST'])
