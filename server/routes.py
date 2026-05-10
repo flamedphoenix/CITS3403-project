@@ -82,30 +82,26 @@ def logout():
     logout_user()
     return redirect(url_for('main.index'))
 
-
-@main.route('/api/game/questions')
-@login_required
-def game_questions():
-    movies = Movie.query.all()
-    if len(movies) < 2:
-        return jsonify({'error': 'Not enough movies in database'}), 500
-
-    random.shuffle(movies)
+def get_random_movie_batch(num_pairs=10):
+    all_movies = Movie.query.all()
+    if len(all_movies) < 2:
+        return None
+    
+    random.shuffle(all_movies)
     pairs = []
     used = []
 
-    for movie in movies:
-        if len(pairs) == 10:
+    for movie in all_movies:
+        if len(pairs) == num_pairs:
             break
         partner = next(
-            (m for m in movies if m not in used and m.id != movie.id and m.rating != movie.rating),
+            (m for m in all_movies if m not in used and m.id != movie.id and m.rating != movie.rating),
             None
         )
         if partner:
             pairs.append([movie.to_dict(), partner.to_dict()])
             used.extend([movie, partner])
-
-    if len(pairs) < 10:
+    return pairs if len(pairs) == num_pairs else None
         return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
 
     return jsonify({'pairs': pairs})
