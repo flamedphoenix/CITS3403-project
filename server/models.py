@@ -40,6 +40,15 @@ class Movie(db.Model):
 
     def __repr__(self):
         return f'<Movie {self.title} ({self.rating})>'
+    
+    
+class DailyMovieSet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    reset_date = db.Column(db.Date, unique=True, nullable=False, index=True)
+    movie_json = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return f'<DailyMovieSet {self.reset_date}>'
 
 
 class Score(db.Model):
