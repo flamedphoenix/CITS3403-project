@@ -51,19 +51,9 @@ def register():
     if form.validate_on_submit():
         existing_user = User.query.filter_by(username=form.username.data).first()
         existing_email = User.query.filter_by(email=form.email.data).first()
-
-        if existing_user and existing_email:
-            flash('Username and email are already in use')
-            return redirect(url_for('main.register'))
-
-        if existing_user:
-            flash('Username already taken')
-            return redirect(url_for('main.register'))
-
-        if existing_email:
-            flash('Email already registered')
-            return redirect(url_for('main.register'))
-        
+        if existing_user or existing_email:
+        	flash('An account with those details already exists')
+            	return redirect(url_for('main.register'))        
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
@@ -76,6 +66,7 @@ def register():
 
 
 @main.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('main.index'))
@@ -119,10 +110,20 @@ def game_submit():
     score_value = data.get('score')
     correct_answers = data.get('correct_answers')
     time_taken = data.get('time_taken')
-
     if any(v is None for v in [score_value, correct_answers, time_taken]):
         return jsonify({'error': 'Missing fields'}), 400
 
+    if not all(isinstance(v, int) for v in [score_value, correct_answers, time_taken]):
+        return jsonify({'error': 'Invalid data types'}), 400
+
+    if not (0 <= score_value <= 100):
+        return jsonify({'error': 'Score out of valid range'}), 400
+
+    if not (0 <= correct_answers <= 10):
+        return jsonify({'error': 'correct_answers out of valid range'}), 400
+
+    if time_taken < 0:
+        return jsonify({'error': 'time_taken must be non-negative'}), 400
     score = Score(
         user_id=current_user.id,
         score=score_value,
