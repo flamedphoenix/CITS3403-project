@@ -1,9 +1,11 @@
-import random
-from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from server.forms import LoginForm, RegistrationForm
-from server.models import User, Movie, Score
+from server.models import User, Movie, Score, SystemState, DailyMovieSet
+from server.tmdb import fetch_movies
+from datetime import date, datetime, timezone, timedelta
 from server import db
+import random, json
 
 
 main = Blueprint('main', __name__)
@@ -170,3 +172,33 @@ def leaderboard():
         }
         for i, row in enumerate(best_scores)
     ]})
+
+
+def maintain_movie_cache():
+    max_cache = current_app.config['MOVIE_CACHE_LIMIT']
+    refresh_delta = current_app.config['REFRESH_DAYS_DELTA']
+
+    current_count = Movie.query.count()
+    if current_count >= max_cache:
+        return
+    
+    state = SystemState.query.first()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    if not state:
+        state = SystemState(last_refresh=now - timedelta(days=refresh_delta))
+        db.session.add(state)
+        db.session.commit()
+
+    if now - state.last_refresh > timedelta(days=refresh_delta) or current_count < 30:
+        new_data, next_pop, next_top = fetch_movies(state.next_popular_page, state.next_top_rated_page)
+
+        for m_data in new_data:
+            if not Movie.query.filter_by(tmdb_id=m_data['tmdb_id']).first():
+                db.session.add(Movie(**m_data))
+        
+        state.last_refresh = now
+        state.next_popular_page = next_pop
+        state.next_top_rated_page = next_top
+        db.session.commit()
+    
