@@ -10,3 +10,8 @@ class Config:
     TMDB_API_KEY = os.environ.get('TMDB_API_KEY')
     TMDB_BASE = 'https://api.themoviedb.org/3'
     POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
+
+    MOVIE_BATCH_SIZE = 250
+    MOVIE_CACHE_LIMIT = 5000
+    REFRESH_DAYS_DELTA = 3
+    
