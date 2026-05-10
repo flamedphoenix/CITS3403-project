@@ -102,6 +102,14 @@ def get_random_movie_batch(num_pairs=10):
             pairs.append([movie.to_dict(), partner.to_dict()])
             used.extend([movie, partner])
     return pairs if len(pairs) == num_pairs else None
+
+
+@main.route('/api/game/questions')
+@login_required
+def game_questions():
+    maintain_movie_cache()
+    pairs = get_random_movie_batch(10)
+    if not pairs:
         return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
 
     return jsonify({'pairs': pairs})
