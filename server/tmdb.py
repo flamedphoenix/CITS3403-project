@@ -35,3 +35,45 @@ def _results_to_movies(results):
         })
     return movies
 
+
+def fetch_movies(popular_start=1, top_rated_start=1):
+    count = current_app.config['MOVIE_BATCH_SIZE']
+    half = count // 2
+    endpoints = [
+        ('/movie/popular',   popular_start),
+        ('/movie/top_rated', top_rated_start),
+    ]
+    seen_ids = set()
+    collected = []
+    next_pages = {}
+
+    for endpoint, start_page in endpoints:
+        entries_needed = half
+        page = start_page
+        last_page = start_page
+
+        while entries_needed > 0:
+            actual_page = ((page - 1) % TMDB_MAX_PAGE) + 1
+            results = _fetch_page(endpoint, actual_page)
+            if not results:
+                break
+
+            for movie in _results_to_movies(results):
+                if movie['tmdb_id'] not in seen_ids:
+                    seen_ids.add(movie['tmdb_id'])
+                    collected.append(movie)
+                    entries_needed -= 1
+                    if entries_needed == 0:
+                        break
+
+            last_page = actual_page
+            page += 1
+
+        next_pages[endpoint] = ((last_page) % TMDB_MAX_PAGE) + 1
+
+    random.shuffle(collected)
+    return (
+        collected,
+        next_pages.get('/movie/popular', popular_start),
+        next_pages.get('/movie/top_rated', top_rated_start),
+    )
