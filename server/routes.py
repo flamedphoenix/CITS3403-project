@@ -52,8 +52,8 @@ def register():
         existing_user = User.query.filter_by(username=form.username.data).first()
         existing_email = User.query.filter_by(email=form.email.data).first()
         if existing_user or existing_email:
-        	flash('An account with those details already exists')
-            	return redirect(url_for('main.register'))        
+            flash('An account with those details already exists')
+            return redirect(url_for('main.register'))        
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
         db.session.add(user)
