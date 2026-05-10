@@ -63,6 +63,13 @@ class Score(db.Model):
         return f'<Score {self.score} by user {self.user_id}>'
 
 
+class SystemState(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last_refresh = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    next_popular_page = db.Column(db.Integer, default=1)
+    next_top_rated_page = db.Column(db.Integer, default=1)
+
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
