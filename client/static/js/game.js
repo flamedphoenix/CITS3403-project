@@ -49,7 +49,16 @@ function generatePairs() {
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
-function startGame() {
+function startGame(mode = 'standard') {
+  const endpoint = mode === 'daily' ? '/api/game/daily' : '/api/game/questions';
+  console.log("Fetching movies from server...");
+  const xhttp = new XMLHttpRequest();
+  xhttp.open("GET", endpoint, true);
+  
+  xhttp.onload = function() {
+    if (this.status === 200) {
+      const response = JSON.parse(this.responseText);
+      
   state = {
     round: 0,
     score: 0,
@@ -57,7 +66,7 @@ function startGame() {
     roundTimeLeft: ROUND_TIME,
     totalTimeTaken: 0,
     timer: null,
-    pairs: generatePairs(),
+        pairs: response.pairs,
     picked: false,
   };
 
@@ -66,6 +75,12 @@ function startGame() {
   show('screen-game');
 
   loadRound();
+    } else {
+      alert("Failed to load movies. Ensure your database has enough entries!");
+    }
+  };
+  
+  xhttp.send();
 }
 
 function startTimer() {
