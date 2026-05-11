@@ -270,4 +270,33 @@ function endGame() {
   document.getElementById('result-correct').textContent = `${state.correct}/${TOTAL_ROUNDS}`;
   document.getElementById('result-time').textContent = `${formattedTimeTaken}s`;
   document.getElementById('result-accuracy').textContent = `${accuracy}%`;
+  
+  submitScore(state.score, state.correct, Number(formattedTimeTaken));
+
+  async function submitScore(score, correctAnswers, timeTaken) {
+    try {
+      const response = await fetch('/api/game/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          score: score,
+          correct_answers: correctAnswers,
+          time_taken: timeTaken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Score save failed:', data.error);
+        return;
+      }
+
+      console.log('Score saved:', data);
+    } catch (error) {
+      console.error('Score submit error:', error);
+    }
+  }
 }

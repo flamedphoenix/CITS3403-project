@@ -56,7 +56,7 @@ class Score(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     correct_answers = db.Column(db.Integer, nullable=False)
-    time_taken = db.Column(db.Integer, nullable=False)
+    time_taken = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
