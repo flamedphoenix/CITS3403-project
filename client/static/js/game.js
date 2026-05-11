@@ -2,49 +2,7 @@ const TOTAL_ROUNDS = 10;
 const ROUND_TIME = 5;
 const TIMER_INTERVAL_MS = 100;
 
-const MOVIES = [
-  { title: "The Shawshank Redemption", year: "1994", rating: 9.3 },
-  { title: "The Godfather",            year: "1972", rating: 9.2 },
-  { title: "The Dark Knight",          year: "2008", rating: 9.0 },
-  { title: "Schindler's List",         year: "1993", rating: 9.0 },
-  { title: "The Lord of the Rings",    year: "2003", rating: 9.0 },
-  { title: "Pulp Fiction",             year: "1994", rating: 8.9 },
-  { title: "Forrest Gump",             year: "1994", rating: 8.8 },
-  { title: "Inception",                year: "2010", rating: 8.8 },
-  { title: "Fight Club",               year: "1999", rating: 8.8 },
-  { title: "The Matrix",               year: "1999", rating: 8.7 },
-  { title: "GoodFellas",               year: "1990", rating: 8.7 },
-  { title: "Interstellar",             year: "2014", rating: 8.7 },
-  { title: "Se7en",                    year: "1995", rating: 8.6 },
-  { title: "The Silence of the Lambs", year: "1991", rating: 8.6 },
-  { title: "Saving Private Ryan",      year: "1998", rating: 8.6 },
-  { title: "The Prestige",             year: "2006", rating: 8.5 },
-  { title: "The Departed",             year: "2006", rating: 8.5 },
-  { title: "Parasite",                 year: "2019", rating: 8.5 },
-  { title: "Gladiator",                year: "2000", rating: 8.5 },
-  { title: "Whiplash",                 year: "2014", rating: 8.5 },
-  { title: "Django Unchained",         year: "2012", rating: 8.4 },
-  { title: "The Lion King",            year: "1994", rating: 8.5 },
-];
-
 let state = {};
-
-function shuffle(arr) {
-  return [...arr].sort(() => Math.random() - 0.5);
-}
-
-function generatePairs() {
-  const available = shuffle(MOVIES);
-  const pairs = [];
-  while (pairs.length < TOTAL_ROUNDS && available.length >= 2) {
-    const a = available.shift();
-    const bIndex = available.findIndex(m => m.rating !== a.rating);
-    if (bIndex === -1) break;
-    const [b] = available.splice(bIndex, 1);
-    pairs.push([a, b]);
-  }
-  return pairs;
-}
 
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
@@ -59,22 +17,22 @@ function startGame(mode = 'standard') {
     if (this.status === 200) {
       const response = JSON.parse(this.responseText);
       
-  state = {
-    round: 0,
-    score: 0,
-    correct: 0,
-    roundTimeLeft: ROUND_TIME,
-    totalTimeTaken: 0,
-    timer: null,
+      state = {
+        round: 0,
+        score: 0,
+        correct: 0,
+        roundTimeLeft: ROUND_TIME,
+        totalTimeTaken: 0,
+        timer: null,
         pairs: response.pairs,
-    picked: false,
-  };
+        picked: false,
+      };
 
-  hide('screen-start');
-  hide('screen-results');
-  show('screen-game');
+      hide('screen-start');
+      hide('screen-results');
+      show('screen-game');
 
-  loadRound();
+      loadRound();
     } else {
       alert("Failed to load movies. Ensure your database has enough entries!");
     }
@@ -193,7 +151,7 @@ function loadRound() {
   posterB.src = movieB.poster_url;
   posterA.onerror = () => { posterA.src = '/static/img/no-poster.png'; };
   posterB.onerror = () => { posterB.src = '/static/img/no-poster.png'; };
-
+  
   hide('rating-a');
   hide('rating-b');
   hide('feedback');
