@@ -113,7 +113,7 @@ function getTimeBonus(timeTakenThisRound) {
   if (timeTakenThisRound < 7) return 40;
   if (timeTakenThisRound < 8) return 30;
   if (timeTakenThisRound < 9) return 20;
-  if (timeTakenThisRound < 6) return 10;
+  if (timeTakenThisRound < 10) return 10;
   return 0;
 }
 
