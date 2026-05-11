@@ -1,9 +1,11 @@
-import random
-from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from server.forms import LoginForm, RegistrationForm
-from server.models import User, Movie, Score
+from server.models import User, Movie, Score, SystemState, DailyMovieSet
+from server.tmdb import fetch_movies
+from datetime import date, datetime, timezone, timedelta
 from server import db
+import random, json
 
 
 main = Blueprint('main', __name__)
@@ -71,33 +73,58 @@ def logout():
     logout_user()
     return redirect(url_for('main.index'))
 
-
-@main.route('/api/game/questions')
-@login_required
-def game_questions():
-    movies = Movie.query.all()
-    if len(movies) < 2:
-        return jsonify({'error': 'Not enough movies in database'}), 500
-
-    random.shuffle(movies)
+def get_random_movie_batch(num_pairs=10):
+    all_movies = Movie.query.all()
+    if len(all_movies) < 2:
+        return None
+    
+    random.shuffle(all_movies)
     pairs = []
     used = []
 
-    for movie in movies:
-        if len(pairs) == 10:
+    for movie in all_movies:
+        if len(pairs) == num_pairs:
             break
         partner = next(
-            (m for m in movies if m not in used and m.id != movie.id and m.rating != movie.rating),
+            (m for m in all_movies if m not in used and m.id != movie.id and m.rating != movie.rating),
             None
         )
         if partner:
             pairs.append([movie.to_dict(), partner.to_dict()])
             used.extend([movie, partner])
+    return pairs if len(pairs) == num_pairs else None
 
-    if len(pairs) < 10:
+
+@main.route('/api/game/questions')
+@login_required
+def game_questions():
+    maintain_movie_cache()
+    pairs = get_random_movie_batch(10)
+    if not pairs:
         return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
-
     return jsonify({'pairs': pairs})
+
+
+@main.route('/api/game/daily')
+@login_required
+def game_daily():
+    today = date.today()
+    daily_entry = DailyMovieSet.query.filter_by(reset_date=today).first()
+    if not daily_entry:
+        maintain_movie_cache()
+        pairs = get_random_movie_batch(10)
+        if not pairs:
+            return jsonify({'error': 'Database too small for daily mode'}), 500
+            
+        new_set = DailyMovieSet(reset_date=today, movie_json=json.dumps(pairs))
+        db.session.add(new_set)
+        db.session.commit()
+        return jsonify({'pairs': pairs})
+    
+    return jsonify({'pairs': json.loads(daily_entry.movie_json)})
+
+
+
 
 
 @main.route('/api/game/submit', methods=['POST'])
@@ -110,6 +137,7 @@ def game_submit():
     score_value = data.get('score')
     correct_answers = data.get('correct_answers')
     time_taken = data.get('time_taken')
+
     if any(v is None for v in [score_value, correct_answers, time_taken]):
         return jsonify({'error': 'Missing fields'}), 400
 
@@ -171,3 +199,33 @@ def leaderboard():
         }
         for i, row in enumerate(best_scores)
     ]})
+
+
+def maintain_movie_cache():
+    max_cache = current_app.config['MOVIE_CACHE_LIMIT']
+    refresh_delta = current_app.config['REFRESH_DAYS_DELTA']
+
+    current_count = Movie.query.count()
+    if current_count >= max_cache:
+        return
+    
+    state = SystemState.query.first()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    if not state:
+        state = SystemState(last_refresh=now - timedelta(days=refresh_delta))
+        db.session.add(state)
+        db.session.commit()
+
+    if now - state.last_refresh > timedelta(days=refresh_delta) or current_count < 30:
+        new_data, next_pop, next_top = fetch_movies(state.next_popular_page, state.next_top_rated_page)
+
+        for m_data in new_data:
+            if not Movie.query.filter_by(tmdb_id=m_data['tmdb_id']).first():
+                db.session.add(Movie(**m_data))
+        
+        state.last_refresh = now
+        state.next_popular_page = next_pop
+        state.next_top_rated_page = next_top
+        db.session.commit()
+    

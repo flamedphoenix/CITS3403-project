@@ -40,6 +40,15 @@ class Movie(db.Model):
 
     def __repr__(self):
         return f'<Movie {self.title} ({self.rating})>'
+    
+    
+class DailyMovieSet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    reset_date = db.Column(db.Date, unique=True, nullable=False, index=True)
+    movie_json = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return f'<DailyMovieSet {self.reset_date}>'
 
 
 class Score(db.Model):
@@ -52,6 +61,13 @@ class Score(db.Model):
 
     def __repr__(self):
         return f'<Score {self.score} by user {self.user_id}>'
+
+
+class SystemState(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last_refresh = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    next_popular_page = db.Column(db.Integer, default=1)
+    next_top_rated_page = db.Column(db.Integer, default=1)
 
 
 @login.user_loader
