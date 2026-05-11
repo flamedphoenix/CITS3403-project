@@ -1,5 +1,5 @@
 const TOTAL_ROUNDS = 10;
-const ROUND_TIME = 5;
+const ROUND_TIME = 10;
 const TIMER_INTERVAL_MS = 100;
 
 const MOVIES = [
@@ -105,10 +105,15 @@ function updateTimerDisplay() {
 
 function getTimeBonus(timeTakenThisRound) {
   if (timeTakenThisRound < 1) return 100;
-  if (timeTakenThisRound < 2) return 80;
-  if (timeTakenThisRound < 3) return 60;
-  if (timeTakenThisRound < 4) return 40;
-  if (timeTakenThisRound < 5) return 20;
+  if (timeTakenThisRound < 2) return 90;
+  if (timeTakenThisRound < 3) return 80;
+  if (timeTakenThisRound < 4) return 70;
+  if (timeTakenThisRound < 5) return 60;
+  if (timeTakenThisRound < 6) return 50;
+  if (timeTakenThisRound < 7) return 40;
+  if (timeTakenThisRound < 8) return 30;
+  if (timeTakenThisRound < 9) return 20;
+  if (timeTakenThisRound < 10) return 10;
   return 0;
 }
 
