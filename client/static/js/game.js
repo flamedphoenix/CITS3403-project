@@ -1,5 +1,5 @@
 const TOTAL_ROUNDS = 10;
-const ROUND_TIME = 5;
+const ROUND_TIME = 10;
 const TIMER_INTERVAL_MS = 100;
 
 let state = {};
@@ -78,10 +78,15 @@ function updateTimerDisplay() {
 
 function getTimeBonus(timeTakenThisRound) {
   if (timeTakenThisRound < 1) return 100;
-  if (timeTakenThisRound < 2) return 80;
-  if (timeTakenThisRound < 3) return 60;
-  if (timeTakenThisRound < 4) return 40;
-  if (timeTakenThisRound < 5) return 20;
+  if (timeTakenThisRound < 2) return 90;
+  if (timeTakenThisRound < 3) return 80;
+  if (timeTakenThisRound < 4) return 70;
+  if (timeTakenThisRound < 5) return 60;
+  if (timeTakenThisRound < 6) return 50;
+  if (timeTakenThisRound < 7) return 40;
+  if (timeTakenThisRound < 8) return 30;
+  if (timeTakenThisRound < 9) return 20;
+  if (timeTakenThisRound < 10) return 10;
   return 0;
 }
 
@@ -249,4 +254,33 @@ function endGame() {
   document.getElementById('result-correct').textContent = `${state.correct}/${TOTAL_ROUNDS}`;
   document.getElementById('result-time').textContent = `${formattedTimeTaken}s`;
   document.getElementById('result-accuracy').textContent = `${accuracy}%`;
+  
+  submitScore(state.score, state.correct, Number(formattedTimeTaken));
+
+  async function submitScore(score, correctAnswers, timeTaken) {
+    try {
+      const response = await fetch('/api/game/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          score: score,
+          correct_answers: correctAnswers,
+          time_taken: timeTaken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Score save failed:', data.error);
+        return;
+      }
+
+      console.log('Score saved:', data);
+    } catch (error) {
+      console.error('Score submit error:', error);
+    }
+  }
 }
