@@ -50,38 +50,23 @@
         </thead>
 
         <tbody class="text-amber-50 text-sm">
-          <!-- Mock frontend data for now. Backend can replace this later. -->
-          <tr class="border-b border-zinc-800 hover:bg-zinc-900 transition">
-            <td class="px-5 py-4 text-amber-400 font-bold">#1</td>
-            <td class="px-5 py-4 font-bold uppercase">putusernamehere1</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...%</td>
-          </tr>
-
-          <tr class="border-b border-zinc-800 hover:bg-zinc-900 transition">
-            <td class="px-5 py-4 text-amber-400 font-bold">#2</td>
-            <td class="px-5 py-4 font-bold uppercase">putusernamehere2</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...%</td>
-          </tr>
-
-          <tr class="border-b border-zinc-800 hover:bg-zinc-900 transition">
-            <td class="px-5 py-4 text-amber-400 font-bold">#3</td>
-            <td class="px-5 py-4 font-bold uppercase">putusernamehere3</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...%</td>
-          </tr>
-
-          <tr class="border-b border-zinc-800 hover:bg-zinc-900 transition">
-            <td class="px-5 py-4 text-amber-400 font-bold">#4</td>
-            <td class="px-5 py-4 font-bold uppercase">putusernamehere4</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...</td>
-            <td class="px-5 py-4">...%</td>
-          </tr>
+          {% if leaderboard %}
+            {% for player in leaderboard %}
+              <tr class="border-b border-zinc-800 hover:bg-zinc-900 transition">
+                <td class="px-5 py-4 text-amber-400 font-bold">#{{ player.rank }}</td>
+                <td class="px-5 py-4 font-bold uppercase">{{ player.username }}</td>
+                <td class="px-5 py-4">{{ player.score }}</td>
+                <td class="px-5 py-4">{{ "%.1f"|format(player.time_taken) }}s</td>
+                <td class="px-5 py-4">{{ player.correct_answers }}/10 — {{ player.accuracy }}%</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" class="px-5 py-8 text-center text-zinc-500 uppercase tracking-widest text-xs">
+                No scores yet. Play a game to claim the first spot.
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
@@ -91,22 +76,30 @@
   <div class="max-w-6xl w-full mx-auto mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Rank</p>
-      <p class="text-amber-400 font-extrabold text-xl">#numberhere1</p>
+      <p class="text-amber-400 font-extrabold text-xl">
+        {% if user_stats %}#{{ user_stats.rank }}{% else %}—{% endif %}
+      </p>
     </div>
 
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Highest Score</p>
-      <p class="text-amber-400 font-extrabold text-xl">numberhere2</p>
+      <p class="text-amber-400 font-extrabold text-xl">
+        {% if user_stats %}{{ user_stats.score }}{% else %}—{% endif %}
+      </p>
     </div>
 
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Time</p>
-      <p class="text-amber-400 font-extrabold text-xl">numberhere3</p>
+      <p class="text-amber-400 font-extrabold text-xl">
+        {% if user_stats %}{{ "%.1f"|format(user_stats.time_taken) }}s{% else %}—{% endif %}
+      </p>
     </div>
 
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Accuracy</p>
-      <p class="text-amber-400 font-extrabold text-xl">numberhere4%</p>
+      <p class="text-amber-400 font-extrabold text-xl">
+        {% if user_stats %}{{ user_stats.correct_answers }}/10 — {{ user_stats.accuracy }}%{% else %}—{% endif %}
+      </p>
     </div>
   </div>
 

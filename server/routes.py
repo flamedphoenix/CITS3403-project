@@ -24,7 +24,45 @@ def game():
 
 @main.route('/scoreboard')
 def scoreboard():
-    return render_template('scoreboard.html')
+    best_scores = []
+
+    users = User.query.join(Score).all()
+
+    for user in users:
+        best_score = Score.query.filter_by(user_id=user.id).order_by(
+            Score.score.desc(),
+            Score.time_taken.asc(),
+            Score.correct_answers.desc()
+        ).first()
+
+        if best_score:
+            best_scores.append({
+                'username': user.username,
+                'score': best_score.score,
+                'time_taken': best_score.time_taken,
+                'correct_answers': best_score.correct_answers,
+                'accuracy': round((best_score.correct_answers / 10) * 100),
+            })
+
+    best_scores.sort(key=lambda row: (-row['score'], row['time_taken'], -row['correct_answers']))
+
+    for index, row in enumerate(best_scores, start=1):
+        row['rank'] = index
+
+    user_stats = None
+
+    if current_user.is_authenticated:
+        for row in best_scores:
+            if row['username'] == current_user.username:
+                user_stats = row
+                break
+
+    return render_template(
+        'scoreboard.html',
+        leaderboard=best_scores,
+        user_stats=user_stats
+    )
+
 
 
 @main.route('/login', methods=['GET', 'POST'])
@@ -131,6 +169,7 @@ def game_daily():
 @login_required
 def game_submit():
     data = request.get_json()
+
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
@@ -141,37 +180,65 @@ def game_submit():
     if any(v is None for v in [score_value, correct_answers, time_taken]):
         return jsonify({'error': 'Missing fields'}), 400
 
-    if not all(isinstance(v, int) for v in [score_value, correct_answers, time_taken]):
+    try:
+        score_value = int(score_value)
+        correct_answers = int(correct_answers)
+        time_taken = float(time_taken)
+    except (TypeError, ValueError):
         return jsonify({'error': 'Invalid data types'}), 400
 
-    if not (0 <= score_value <= 100):
+    if not (0 <= score_value <= 2000):
         return jsonify({'error': 'Score out of valid range'}), 400
 
     if not (0 <= correct_answers <= 10):
         return jsonify({'error': 'correct_answers out of valid range'}), 400
 
-    if time_taken < 0:
-        return jsonify({'error': 'time_taken must be non-negative'}), 400
-    score = Score(
+    if not (0 <= time_taken <= 100):
+        return jsonify({'error': 'time_taken out of valid range'}), 400
+
+    new_score = Score(
         user_id=current_user.id,
         score=score_value,
         correct_answers=correct_answers,
-        time_taken=time_taken,
+        time_taken=round(time_taken, 1),
     )
-    db.session.add(score)
+
+    db.session.add(new_score)
     db.session.commit()
 
-    best = Score.query.filter_by(user_id=current_user.id).order_by(Score.score.desc()).first()
+    best_score = Score.query.filter_by(user_id=current_user.id).order_by(
+        Score.score.desc(),
+        Score.time_taken.asc(),
+        Score.correct_answers.desc()
+    ).first()
 
-    user_best_subq = db.session.query(
-        db.func.max(Score.score)
-    ).filter(Score.user_id == User.id).correlate(User).scalar_subquery()
+    all_best_scores = []
 
-    rank = db.session.query(db.func.count()).filter(
-        user_best_subq > best.score
-    ).scalar() + 1
+    for user in User.query.join(Score).all():
+        user_best = Score.query.filter_by(user_id=user.id).order_by(
+            Score.score.desc(),
+            Score.time_taken.asc(),
+            Score.correct_answers.desc()
+        ).first()
 
-    return jsonify({'saved': True, 'best_score': best.score, 'rank': rank})
+        if user_best:
+            all_best_scores.append(user_best)
+
+    all_best_scores.sort(key=lambda s: (-s.score, s.time_taken, -s.correct_answers))
+
+    rank = next(
+        (index + 1 for index, score in enumerate(all_best_scores) if score.user_id == current_user.id),
+        None
+    )
+
+    return jsonify({
+        'saved': True,
+        'best_score': best_score.score,
+        'best_time_taken': best_score.time_taken,
+        'best_correct_answers': best_score.correct_answers,
+        'best_accuracy': round((best_score.correct_answers / 10) * 100),
+        'rank': rank
+    })
 
 
 @main.route('/api/scores/leaderboard')
