@@ -141,11 +141,9 @@ function loadRound() {
 
   document.getElementById('title-a').textContent = movieA.title;
   document.getElementById('year-a').textContent = movieA.year;
-  document.getElementById('poster-a').src = movieA.poster_url;
 
   document.getElementById('title-b').textContent = movieB.title;
   document.getElementById('year-b').textContent = movieB.year;
-  document.getElementById('poster-b').src = movieB.poster_url;
 
   document.getElementById('hint-a').textContent = 'Click to pick';
   document.getElementById('hint-b').textContent = 'Click to pick';
