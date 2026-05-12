@@ -24,7 +24,7 @@ def _results_to_movies(results):
     poster_base = current_app.config['POSTER_BASE']
     movies = []
     for r in results:
-        if not r.get('vote_average') or not r.get('poster_path'):
+        if not r.get('vote_average') or not r.get('poster_path') or not r.get('title'):
             continue
         movies.append({
             'title': r['title'],
