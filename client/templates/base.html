@@ -73,6 +73,44 @@
     <p>★ RateRace &mdash; CITS3403 Project &mdash; 2026 ★</p>
   </footer>
 
+  {% if current_user.is_authenticated %}
+  <!-- Challenge popup (available on every page) -->
+  <div id="challenge-popup" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-zinc-950 border-2 border-amber-400 shadow-retro p-8 text-center max-w-sm w-full mx-4"
+         style="box-shadow: 4px 4px 0px #b45309;">
+      <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-3">★ &nbsp; Incoming Challenge &nbsp; ★</p>
+      <h2 id="popup-title" class="text-2xl font-extrabold text-amber-50 uppercase tracking-tight mb-2"></h2>
+      <p class="text-zinc-500 uppercase tracking-widest text-xs mb-6">has challenged you to a duel!</p>
+      <p class="text-zinc-400 text-xs mb-6">Auto-declining in <span id="popup-countdown" class="text-amber-400 font-bold">30</span>s</p>
+      <div class="flex gap-4 justify-center">
+        <button id="btn-accept"
+          class="bg-amber-400 text-black font-extrabold uppercase tracking-widest text-xs px-6 py-3 hover:bg-amber-300 transition border-b-4 border-amber-600"
+          style="box-shadow: 4px 4px 0px #b45309;">
+          Accept
+        </button>
+        <button id="btn-decline"
+          class="text-amber-400 font-extrabold uppercase tracking-widest text-xs px-6 py-3 border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition"
+          style="box-shadow: 4px 4px 0px #b45309;">
+          Decline
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global toast -->
+  <div id="global-toast" class="hidden fixed bottom-6 right-6 bg-zinc-900 border-2 border-amber-400 px-6 py-4 z-50"
+       style="box-shadow: 4px 4px 0px #b45309;">
+    <p id="global-toast-text" class="text-amber-400 font-extrabold uppercase tracking-widest text-xs"></p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const GLOBAL_USER_ID = {{ current_user.id | tojson }};
+    const GLOBAL_USERNAME = {{ current_user.username | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+  {% endif %}
+
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -70,6 +70,24 @@ class SystemState(db.Model):
     next_top_rated_page = db.Column(db.Integer, default=1)
 
 
+class ChallengeSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    challenger_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    opponent_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, active, completed, declined
+    movie_json = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    challenger_score = db.Column(db.Integer, default=0)
+    opponent_score = db.Column(db.Integer, default=0)
+    winner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    challenger = db.relationship('User', foreign_keys=[challenger_id])
+    opponent = db.relationship('User', foreign_keys=[opponent_id])
+
+    def __repr__(self):
+        return f'<ChallengeSession {self.id} {self.status}>'
+
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
