@@ -3,11 +3,17 @@ const ROUND_TIME = 10;
 const TIMER_INTERVAL_MS = 100;
 
 let state = {};
+let gameTimer = null;
+let gameSeq = 0;
 
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
 function startGame(mode = 'standard', date = null) {
+  clearInterval(gameTimer);
+  const seq = ++gameSeq;
+  const xhttp = new XMLHttpRequest();
+  
   hide('daily-panel');
   const endpoint = mode === 'daily' ? `/api/game/daily?date=${date ? `${date}` : ''}` : '/api/game/questions';
   if (mode === 'daily') {
@@ -15,10 +21,10 @@ function startGame(mode = 'standard', date = null) {
   }
 
   console.log("Fetching movies from server...", endpoint);
-  const xhttp = new XMLHttpRequest();
   xhttp.open("GET", endpoint, true);
-  
+
   xhttp.onload = function() {
+    if (seq !== gameSeq) return;
     if (this.status === 200) {
       const response = JSON.parse(this.responseText);
       
@@ -33,7 +39,6 @@ function startGame(mode = 'standard', date = null) {
         correct: 0,
         roundTimeLeft: ROUND_TIME,
         totalTimeTaken: 0,
-        timer: null,
         pairs: response.pairs,
         picked: false,
         mode: mode,
@@ -63,7 +68,7 @@ function startGame(mode = 'standard', date = null) {
       alert(err.error || "Failed to load game.");
     }
   };
-  
+
   xhttp.send();
 }
 
@@ -82,17 +87,17 @@ function toggleDailyPanel() {
 }
 
 function startTimer() {
-  clearInterval(state.timer);
+  clearInterval(gameTimer);
 
   state.roundTimeLeft = ROUND_TIME;
   updateTimerDisplay();
 
-  state.timer = setInterval(() => {
+  gameTimer = setInterval(() => {
     state.roundTimeLeft = Math.max(0, state.roundTimeLeft - TIMER_INTERVAL_MS / 1000);
     updateTimerDisplay();
 
     if (state.roundTimeLeft <= 0) {
-      clearInterval(state.timer);
+      clearInterval(gameTimer);
       handleTimeout();
     }
   }, TIMER_INTERVAL_MS);
@@ -295,7 +300,7 @@ if (isCorrect) {
 
   show('feedback');
 
-  clearInterval(state.timer);
+  clearInterval(gameTimer);
 
   setTimeout(() => {
     nextRound();
@@ -312,7 +317,7 @@ function nextRound() {
 }
 
 function endGame() {
-  clearInterval(state.timer);
+  clearInterval(gameTimer);
 
   hide('screen-game');
   show('screen-results');

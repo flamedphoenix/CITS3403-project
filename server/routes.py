@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from server.forms import LoginForm, RegistrationForm
-from server.models import User, Movie, Score, SystemState, DailyMovieSet, DailyScore
+from server.models import User, Movie, Score, SystemState, DailyMovieSet, DailyScore, ChallengeSession
 from server.tmdb import fetch_movies
 from datetime import date, datetime, timezone, timedelta
 from server import db
@@ -24,45 +24,19 @@ def game():
 
 @main.route('/scoreboard')
 def scoreboard():
-    best_scores = []
+    return render_template('scoreboard.html')
 
-    users = User.query.join(Score).all()
 
-    for user in users:
-        best_score = Score.query.filter_by(user_id=user.id).order_by(
-            Score.score.desc(),
-            Score.time_taken.asc(),
-            Score.correct_answers.desc()
-        ).first()
 
-        if best_score:
-            best_scores.append({
-                'username': user.username,
-                'score': best_score.score,
-                'time_taken': best_score.time_taken,
-                'correct_answers': best_score.correct_answers,
-                'accuracy': round((best_score.correct_answers / 10) * 100),
-            })
-
-    best_scores.sort(key=lambda row: (-row['score'], row['time_taken'], -row['correct_answers']))
-
-    for index, row in enumerate(best_scores, start=1):
-        row['rank'] = index
-
-    user_stats = None
-
-    if current_user.is_authenticated:
-        for row in best_scores:
-            if row['username'] == current_user.username:
-                user_stats = row
-                break
-
-    return render_template(
-        'scoreboard.html',
-        leaderboard=best_scores,
-        user_stats=user_stats
-    )
-
+@main.route('/challenge/<int:session_id>')
+@login_required
+def challenge(session_id):
+    session = ChallengeSession.query.get_or_404(session_id)
+    if current_user.id not in [session.challenger_id, session.opponent_id]:
+        return redirect(url_for('main.scoreboard'))
+    if session.status not in ('active', 'completed'):
+        return redirect(url_for('main.scoreboard'))
+    return render_template('challenge.html', session_id=session_id)
 
 
 @main.route('/login', methods=['GET', 'POST'])
@@ -306,6 +280,7 @@ def game_submit():
 @main.route('/api/scores/leaderboard')
 def leaderboard():
     best_scores = db.session.query(
+        User.id.label('user_id'),
         User.username,
         db.func.max(Score.score).label('best_score'),
         db.func.min(Score.time_taken).label('best_time'),
@@ -320,6 +295,7 @@ def leaderboard():
     return jsonify({'leaderboard': [
         {
             'rank': i + 1,
+            'user_id': row.user_id,
             'username': row.username,
             'best_score': row.best_score,
             'best_time': row.best_time,

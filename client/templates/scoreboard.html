@@ -25,10 +25,7 @@
 
   <!-- Title -->
   <div class="text-center mb-6">
-    <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-4">
-      ★ &nbsp; Top Racers &nbsp; ★
-    </p>
-
+    <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-4">★ &nbsp; Top Racers &nbsp; ★</p>
     <h1 class="text-5xl md:text-6xl font-extrabold text-amber-400 uppercase tracking-tight text-shadow-retro">
       Leaderboard
     </h1>
@@ -37,71 +34,67 @@
   <!-- Leaderboard Table -->
   <div class="max-w-6xl w-full mx-auto flex-1 min-h-0 border-2 border-zinc-700 shadow-retro bg-black overflow-hidden">
 
-    <div class="max-h-[52vh] overflow-y-auto">
-      <table class="w-full text-left border-collapse">
+    <div class="max-h-[52vh] overflow-x-auto overflow-y-auto">
+      <table class="w-full text-left border-collapse min-w-[480px]">
         <thead class="sticky top-0 bg-black border-b-2 border-amber-400 z-10">
           <tr class="text-amber-400 uppercase tracking-widest text-xs">
-            <th class="px-5 py-4">Ranking</th>
-            <th class="px-5 py-4">Account Username</th>
-            <th class="px-5 py-4">Highest Score</th>
-            <th class="px-5 py-4">Time Taken</th>
-            <th class="px-5 py-4">Accuracy</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Ranking</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Username</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Highest Score</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Best Time</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Accuracy</th>
+            {% if current_user.is_authenticated %}
+            <th class="px-3 py-3 md:px-5 md:py-4">Challenge</th>
+            {% endif %}
           </tr>
         </thead>
-
-        <tbody class="text-amber-50 text-sm">
-          {% if leaderboard %}
-            {% for player in leaderboard %}
-              <tr class="border-b border-zinc-800 hover:bg-zinc-900 transition">
-                <td class="px-5 py-4 text-amber-400 font-bold">#{{ player.rank }}</td>
-                <td class="px-5 py-4 font-bold uppercase">{{ player.username }}</td>
-                <td class="px-5 py-4">{{ player.score }}</td>
-                <td class="px-5 py-4">{{ "%.1f"|format(player.time_taken) }}s</td>
-                <td class="px-5 py-4">{{ player.correct_answers }}/10 — {{ player.accuracy }}%</td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="5" class="px-5 py-8 text-center text-zinc-500 uppercase tracking-widest text-xs">
-                No scores yet. Play a game to claim the first spot.
-              </td>
-            </tr>
-          {% endif %}
+        <tbody id="leaderboard-body" class="text-amber-50 text-sm">
+          <tr>
+            <td colspan="6" class="px-3 py-8 text-center text-zinc-600 uppercase tracking-widest text-xs">
+              Loading...
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
   </div>
 
   <!-- User Stats -->
+  {% if current_user.is_authenticated %}
   <div class="max-w-6xl w-full mx-auto mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Rank</p>
-      <p class="text-amber-400 font-extrabold text-xl">
-        {% if user_stats %}#{{ user_stats.rank }}{% else %}—{% endif %}
-      </p>
+      <p id="stat-rank" class="text-amber-400 font-extrabold text-xl">—</p>
     </div>
-
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Highest Score</p>
-      <p class="text-amber-400 font-extrabold text-xl">
-        {% if user_stats %}{{ user_stats.score }}{% else %}—{% endif %}
-      </p>
+      <p id="stat-score" class="text-amber-400 font-extrabold text-xl">—</p>
     </div>
-
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
-      <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Time</p>
-      <p class="text-amber-400 font-extrabold text-xl">
-        {% if user_stats %}{{ "%.1f"|format(user_stats.time_taken) }}s{% else %}—{% endif %}
-      </p>
+      <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Best Time</p>
+      <p id="stat-time" class="text-amber-400 font-extrabold text-xl">—</p>
     </div>
-
     <div class="border-2 border-zinc-700 p-4 bg-black shadow-retro">
       <p class="text-zinc-500 uppercase tracking-widest text-xs mb-1">Your Accuracy</p>
-      <p class="text-amber-400 font-extrabold text-xl">
-        {% if user_stats %}{{ user_stats.correct_answers }}/10 — {{ user_stats.accuracy }}%{% else %}—{% endif %}
-      </p>
+      <p id="stat-accuracy" class="text-amber-400 font-extrabold text-xl">—</p>
     </div>
   </div>
+  {% endif %}
 
 </section>
+
+<!-- Challenge sent toast (scoreboard-page only) -->
+<div id="toast-sent" class="hidden fixed bottom-6 right-6 bg-zinc-900 border-2 border-amber-400 shadow-retro px-6 py-4 z-50" style="bottom: 5rem;">
+  <p id="toast-sent-text" class="text-amber-400 font-extrabold uppercase tracking-widest text-xs"></p>
+</div>
+
+<script>
+  const CURRENT_USER_ID  = {{ current_user.id | tojson if current_user.is_authenticated else 'null' }};
+  const CURRENT_USERNAME = {{ current_user.username | tojson if current_user.is_authenticated else 'null' }};
+  const IS_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/scoreboard.js') }}"></script>
 {% endblock %}
