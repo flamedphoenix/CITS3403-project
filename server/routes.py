@@ -67,7 +67,8 @@ def scoreboard():
 @main.route('/profile')
 @login_required
 def profile():
-    games_played = Score.query.filter_by(user_id=current_user.id).count()
+    user_scores = Score.query.filter_by(user_id=current_user.id).all()
+    games_played = len(user_scores)
 
     best_playthrough = Score.query.filter_by(user_id=current_user.id).order_by(
         Score.score.desc(),
@@ -107,14 +108,30 @@ def profile():
             user_rank = index
             break
 
+    if games_played > 0:
+        average_points = round(sum(score.score for score in user_scores) / games_played)
+        average_accuracy = round(
+            (sum(score.correct_answers for score in user_scores) / (games_played * 10)) * 100
+        )
+        average_time_taken = round(sum(score.time_taken for score in user_scores) / games_played, 1)
+    else:
+        average_points = None
+        average_accuracy = None
+        average_time_taken = None
+
     profile_stats = {
         'username': current_user.username,
         'games_played': games_played,
         'rank': user_rank,
+
         'best_score': best_playthrough.score if best_playthrough else None,
         'best_time_taken': best_playthrough.time_taken if best_playthrough else None,
         'best_correct_answers': best_playthrough.correct_answers if best_playthrough else None,
         'best_accuracy': round((best_playthrough.correct_answers / 10) * 100) if best_playthrough else None,
+
+        'average_points': average_points,
+        'average_accuracy': average_accuracy,
+        'average_time_taken': average_time_taken,
     }
 
     return render_template('profile.html', stats=profile_stats)

@@ -32,20 +32,10 @@
       </h1>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="w-full max-w-sm mx-auto flex flex-col gap-5 text-center">
 
-      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
-        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Score</p>
-        <p class="text-amber-400 font-extrabold text-4xl">
-          {% if stats.best_score is not none %}
-            {{ stats.best_score }}
-          {% else %}
-            —
-          {% endif %}
-        </p>
-      </div>
-
-      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+      <!-- Leaderboard Rank -->
+      <div class="border-2 border-amber-400 bg-black p-5 shadow-retro">
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Leaderboard Rank</p>
         <p class="text-amber-400 font-extrabold text-4xl">
           {% if stats.rank %}
@@ -56,9 +46,22 @@
         </p>
       </div>
 
-      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+      <!-- Best Score -->
+      <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Score</p>
+        <p class="text-amber-400 font-extrabold text-3xl">
+          {% if stats.best_score is not none %}
+            {{ stats.best_score }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Best Accuracy -->
+      <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Accuracy</p>
-        <p class="text-amber-400 font-extrabold text-4xl">
+        <p class="text-amber-400 font-extrabold text-3xl">
           {% if stats.best_accuracy is not none %}
             {{ stats.best_correct_answers }}/10 — {{ stats.best_accuracy }}%
           {% else %}
@@ -67,9 +70,10 @@
         </p>
       </div>
 
-      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+      <!-- Best Time Taken -->
+      <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Time Taken</p>
-        <p class="text-amber-400 font-extrabold text-4xl">
+        <p class="text-amber-400 font-extrabold text-3xl">
           {% if stats.best_time_taken is not none %}
             {{ stats.best_time_taken }}s
           {% else %}
@@ -78,13 +82,50 @@
         </p>
       </div>
 
-    </div>
+      <!-- Games Played -->
+      <div class="border-2 border-amber-400 bg-black p-5 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Games Played</p>
+        <p class="text-amber-400 font-extrabold text-4xl">
+          {{ stats.games_played }}
+        </p>
+      </div>
 
-    <div class="border-2 border-amber-400 bg-black p-6 shadow-retro text-center">
-      <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Games Played</p>
-      <p class="text-amber-400 font-extrabold text-5xl">
-        {{ stats.games_played }}
-      </p>
+      <!-- Average Points -->
+      <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Average Points</p>
+        <p class="text-amber-400 font-extrabold text-3xl">
+          {% if stats.average_points is not none %}
+            {{ stats.average_points }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Average Accuracy -->
+      <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Average Accuracy</p>
+        <p class="text-amber-400 font-extrabold text-3xl">
+          {% if stats.average_accuracy is not none %}
+            {{ stats.average_accuracy }}%
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Average Time Taken -->
+      <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Average Time Taken</p>
+        <p class="text-amber-400 font-extrabold text-3xl">
+          {% if stats.average_time_taken is not none %}
+            {{ stats.average_time_taken }}s
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
     </div>
 
   </div>
