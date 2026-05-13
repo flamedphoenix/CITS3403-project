@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from server.forms import LoginForm, RegistrationForm
-from server.models import User, Movie, Score, SystemState, DailyMovieSet
+from server.models import User, Movie, Score, SystemState, DailyMovieSet, DailyScore
 from server.tmdb import fetch_movies
 from datetime import date, datetime, timezone, timedelta
 from server import db
@@ -162,6 +162,31 @@ def game_daily():
     return jsonify({'pairs': json.loads(daily_entry.movie_json)})
 
 
+
+@main.route('/api/game/daily/history')
+@login_required
+def game_daily_history():
+    entries = DailyMovieSet.query.order_by(DailyMovieSet.reset_date.desc()).limit(30).all()
+    today = date.today()
+
+    user_daily_scores = {
+        ds.reset_date: ds
+        for ds in DailyScore.query.filter_by(user_id=current_user.id).all()
+    }
+
+    return jsonify({
+        'dates': [
+            {
+                'date': str(e.reset_date),
+                'is_today': e.reset_date == today,
+                'label': e.reset_date.strftime('%b %d, %Y'),
+                'played': e.reset_date in user_daily_scores,
+                'score': user_daily_scores[e.reset_date].score if e.reset_date in user_daily_scores else None,
+                'correct': user_daily_scores[e.reset_date].correct_answers if e.reset_date in user_daily_scores else None,
+            }
+            for e in entries
+        ]
+    })
 
 
 
