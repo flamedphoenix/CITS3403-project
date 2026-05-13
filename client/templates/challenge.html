@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}RateRace — Challenge{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Courier Prime', monospace; }
+  h1, h2, h3 { font-family: 'Special Elite', cursive; }
+  .shadow-retro { box-shadow: 4px 4px 0px #b45309; }
+  .text-shadow-retro { text-shadow: 2px 2px 0px #b45309; }
+  #timer-bar { transition: width 1s linear; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-150px)] bg-zinc-950 flex flex-col items-center justify-center px-6 py-10">
+
+  <!-- Waiting screen -->
+  <div id="screen-waiting" class="text-center">
+    <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-6">★ &nbsp; Challenge Mode &nbsp; ★</p>
+    <h2 class="text-4xl font-extrabold text-amber-50 uppercase tracking-tight text-shadow-retro mb-4">Waiting for opponent...</h2>
+    <p class="text-zinc-500 text-xs uppercase tracking-widest">Both players must be on this page to begin</p>
+  </div>
+
+  <!-- Game screen -->
+  <div id="screen-game" class="hidden w-full" style="max-width: 1200px;">
+
+    <!-- Player scores HUD -->
+    <div class="flex justify-between items-center mb-4 px-1">
+      <div class="text-center">
+        <p id="challenger-name" class="text-amber-400 font-extrabold uppercase tracking-widest text-sm"></p>
+        <p id="challenger-score" class="text-amber-50 font-extrabold text-3xl">0</p>
+        <p id="challenger-correct" class="text-zinc-500 text-xs uppercase tracking-widest">0/10 correct</p>
+      </div>
+      <div class="text-center">
+        <span class="text-amber-400 font-extrabold text-2xl uppercase tracking-widest text-shadow-retro">VS</span>
+        <p class="text-zinc-600 text-xs uppercase tracking-widest mt-1">Round <span id="round-display" class="text-amber-400">1</span>/10</p>
+      </div>
+      <div class="text-center">
+        <p id="opponent-name" class="text-amber-400 font-extrabold uppercase tracking-widest text-sm"></p>
+        <p id="opponent-score" class="text-amber-50 font-extrabold text-3xl">0</p>
+        <p id="opponent-correct" class="text-zinc-500 text-xs uppercase tracking-widest">0/10 correct</p>
+      </div>
+    </div>
+
+    <!-- Timer bar -->
+    <div class="w-full bg-zinc-800 border-2 border-zinc-700 mb-5">
+      <div id="timer-bar" class="h-3 bg-amber-400" style="width: 100%"></div>
+    </div>
+
+    <div class="flex justify-between items-center mb-6 px-1">
+      <span id="timer-display" class="text-amber-400 font-extrabold text-2xl">10</span>
+      <p class="text-zinc-500 uppercase tracking-widest text-xs font-bold">— Which film has the higher rating? —</p>
+      <span id="opponent-status" class="text-zinc-600 text-xs uppercase tracking-widest font-bold">Opponent thinking...</span>
+    </div>
+
+    <!-- Movie cards -->
+    <div class="flex items-stretch justify-center gap-6 flex-wrap">
+
+      <!-- Movie A -->
+      <div id="card-a" onclick="pick('a')"
+        class="border-2 border-zinc-700 hover:border-amber-400 transition cursor-pointer flex flex-col shadow-retro group" style="width: 340px;">
+        <div class="w-full bg-zinc-900 border-b-2 border-zinc-700 overflow-hidden" style="height: 380px;">
+          <img id="poster-a" src="" alt="Movie Poster" class="w-full h-full object-cover">
+        </div>
+        <div class="p-4 text-center bg-black flex-1 flex flex-col justify-between">
+          <div>
+            <p id="title-a" class="text-amber-50 font-bold text-sm uppercase tracking-wide mb-1"></p>
+            <p id="year-a" class="text-zinc-500 text-xs mb-3"></p>
+            <div id="rating-a" class="hidden text-amber-400 font-extrabold text-2xl text-shadow-retro mb-2">
+              ★ <span id="rating-val-a"></span>
+            </div>
+          </div>
+          <p id="hint-a" class="text-zinc-600 text-xs uppercase tracking-widest group-hover:text-amber-400 transition">Click to pick</p>
+        </div>
+      </div>
+
+      <!-- VS -->
+      <div class="flex flex-col items-center justify-center gap-2 shrink-0">
+        <span class="text-amber-400 font-extrabold text-4xl uppercase tracking-widest text-shadow-retro">VS</span>
+        <span class="text-zinc-600 text-xs uppercase tracking-widest">IMDb Rating</span>
+      </div>
+
+      <!-- Movie B -->
+      <div id="card-b" onclick="pick('b')"
+        class="border-2 border-zinc-700 hover:border-amber-400 transition cursor-pointer flex flex-col shadow-retro group" style="width: 340px;">
+        <div class="w-full bg-zinc-900 border-b-2 border-zinc-700 overflow-hidden" style="height: 380px;">
+          <img id="poster-b" src="" alt="Movie Poster" class="w-full h-full object-cover">
+        </div>
+        <div class="p-4 text-center bg-black flex-1 flex flex-col justify-between">
+          <div>
+            <p id="title-b" class="text-amber-50 font-bold text-sm uppercase tracking-wide mb-1"></p>
+            <p id="year-b" class="text-zinc-500 text-xs mb-3"></p>
+            <div id="rating-b" class="hidden text-amber-400 font-extrabold text-2xl text-shadow-retro mb-2">
+              ★ <span id="rating-val-b"></span>
+            </div>
+          </div>
+          <p id="hint-b" class="text-zinc-600 text-xs uppercase tracking-widest group-hover:text-amber-400 transition">Click to pick</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Round feedback -->
+    <div id="feedback" class="hidden text-center mt-8">
+      <p id="feedback-text" class="text-2xl font-extrabold uppercase tracking-widest mb-1"></p>
+      <p id="feedback-sub" class="text-zinc-500 text-xs uppercase tracking-widest"></p>
+    </div>
+
+  </div>
+
+  <!-- Results screen -->
+  <div id="screen-results" class="hidden text-center w-full" style="max-width: 750px;">
+    <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-4">★ &nbsp; Challenge Over &nbsp; ★</p>
+    <h2 id="winner-text" class="text-5xl font-extrabold text-amber-50 uppercase tracking-tight text-shadow-retro mb-8"></h2>
+
+    <div class="flex justify-center gap-6 mb-10">
+      <div class="border-2 border-zinc-700 p-6 bg-black shadow-retro text-center flex-1">
+        <p id="result-challenger-name" class="text-amber-400 font-extrabold uppercase tracking-widest text-sm mb-2"></p>
+        <p id="result-challenger-score" class="text-amber-400 font-extrabold text-5xl text-shadow-retro"></p>
+        <p class="text-zinc-600 text-xs uppercase tracking-widest mt-1">points</p>
+        <p id="result-challenger-correct" class="text-zinc-500 text-xs uppercase tracking-widest mt-2"></p>
+      </div>
+      <div class="flex items-center">
+        <span class="text-zinc-600 font-extrabold text-2xl uppercase tracking-widest">VS</span>
+      </div>
+      <div class="border-2 border-zinc-700 p-6 bg-black shadow-retro text-center flex-1">
+        <p id="result-opponent-name" class="text-amber-400 font-extrabold uppercase tracking-widest text-sm mb-2"></p>
+        <p id="result-opponent-score" class="text-amber-400 font-extrabold text-5xl text-shadow-retro"></p>
+        <p class="text-zinc-600 text-xs uppercase tracking-widest mt-1">points</p>
+        <p id="result-opponent-correct" class="text-zinc-500 text-xs uppercase tracking-widest mt-2"></p>
+      </div>
+    </div>
+
+    <div class="flex justify-center gap-4 flex-wrap">
+      <a href="{{ url_for('main.scoreboard') }}"
+        style="padding: 0.75rem 2.5rem;"
+        class="flex items-center justify-center gap-2 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 shadow-retro">
+        ← Back to Leaderboard
+      </a>
+      <a href="{{ url_for('main.game') }}"
+        style="padding: 0.75rem 2.5rem;"
+        class="flex items-center justify-center gap-2 text-amber-400 font-extrabold uppercase tracking-widest text-xs border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition shadow-retro">
+        Play Solo →
+      </a>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  const SESSION_ID = {{ session_id }};
+  const CURRENT_USER_ID = {{ current_user.id }};
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/challenge.js') }}"></script>
+{% endblock %}
