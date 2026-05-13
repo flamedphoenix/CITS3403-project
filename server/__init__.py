@@ -3,12 +3,14 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 from server.config import Config
 
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'main.login'
+socketio = SocketIO()
 
 def create_app():
     app = Flask(
@@ -19,15 +21,14 @@ def create_app():
     app.config.from_object(Config)
     db.init_app(app)
     migrate.init_app(app, db)
-
-
-    login.init_app(app) 
-
+    login.init_app(app)
+    socketio.init_app(app)
 
     from server.routes import main
     app.register_blueprint(main)
 
-    from server import models 
+    from server import models
+    from server import challenge
 
     return app
 
