@@ -34,6 +34,19 @@
         class="flex items-center justify-center gap-3 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-sm hover:bg-amber-300 transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 shadow-retro">
         <span>▶</span><span>Start Game</span>
       </button>
+
+        <button onclick="toggleDailyPanel()"
+          style="padding: 1rem 0.5rem;"
+          class="flex items-center justify-center text-amber-400 font-extrabold text-sm border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition"><!-- shadow-retro-->
+          <span id="daily-toggle-arrow">▶</span>
+        </button>
+  <!-- Daily panel — hidden by default -->
+  <div id="daily-panel" class="hidden mt-8 w-full border-2 border-zinc-700 bg-black shadow-retro" style="max-width: 480px; margin-left: auto; margin-right: auto;">
+    <div class="border-b-2 border-zinc-700 py-3">
+      <p class="text-amber-400 uppercase tracking-widest text-xs text-center font-bold">★ &nbsp; Previous Daily Games &nbsp; ★</p>
+    </div>
+    <div id="daily-history-list" class="max-h-64 overflow-y-auto">
+      <p class="text-zinc-500 text-xs px-5 py-4 uppercase tracking-widest">Loading...</p>
     </div>
   </div>
 

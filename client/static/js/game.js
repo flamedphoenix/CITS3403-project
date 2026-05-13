@@ -7,9 +7,7 @@ let state = {};
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
-function startGame(mode = 'standard') {
-  const endpoint = mode === 'daily' ? '/api/game/daily' : '/api/game/questions';
-  console.log("Fetching movies from server...");
+  hide('daily-panel');
   const xhttp = new XMLHttpRequest();
   xhttp.open("GET", endpoint, true);
   
@@ -39,6 +37,20 @@ function startGame(mode = 'standard') {
   };
   
   xhttp.send();
+}
+
+function toggleDailyPanel() {
+  const panel = document.getElementById('daily-panel');
+  const arrow = document.getElementById('daily-toggle-arrow');
+
+  if (panel.classList.contains('hidden')) {
+    show('daily-panel');
+    arrow.textContent = '▼';
+    loadDailyHistory();
+  } else {
+    hide('daily-panel');
+    arrow.textContent = '▶';
+  }
 }
 
 function startTimer() {
@@ -74,6 +86,38 @@ function updateTimerDisplay() {
     bar.classList.replace('bg-red-500', 'bg-amber-400');
     timerNum.classList.replace('text-red-400', 'text-amber-400');
   }
+}
+
+
+function loadDailyHistory() {
+  fetch('/api/game/daily/history')
+    .then(r => r.json())
+    .then(data => {
+      const list = document.getElementById('daily-history-list');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      data.dates.forEach(entry => {
+        const btn = document.createElement('button');
+
+        if (entry.is_today) {          // today's daily
+          btn.className = 'w-full text-left px-4 py-2 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-xs border-b border-amber-600 hover:bg-amber-300 transition flex justify-between items-center';
+          btn.innerHTML = `<span>★ Today's Daily</span>${entry.played ? `<span>${entry.score}pts · ${entry.correct}/10</span>` : '<span class="opacity-60">Not played</span>'}`;
+          btn.onclick = () => startGame('daily');
+        }
+        else if (entry.played) {      // past daily, already played
+          btn.className = 'w-full text-left px-4 py-2 bg-zinc-900 text-zinc-500 font-bold text-xs uppercase tracking-widest border-b border-zinc-800 flex justify-between items-center';
+          btn.innerHTML = `<span>${entry.label}</span><span>${entry.score}pts · ${entry.correct}/10</span>`;
+          btn.onclick = () => startGame('daily', entry.date);
+
+        } else {                      // past daily, not played
+          btn.className = 'w-full text-left px-4 py-2 bg-zinc-900 text-zinc-600 font-bold text-xs uppercase tracking-widest border-b border-zinc-800 hover:bg-zinc-800 transition flex justify-between items-center';
+          btn.innerHTML = `<span>${entry.label}</span><span class="text-zinc-700 text-xs">—</span>`;
+          btn.onclick = () => startGame('daily', entry.date);
+        }
+        list.appendChild(btn);
+      });
+    });
 }
 
 function getTimeBonus(timeTakenThisRound) {

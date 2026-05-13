@@ -159,7 +159,7 @@ def game_daily():
         db.session.commit()
         return jsonify({'pairs': pairs})
     
-    return jsonify({'pairs': json.loads(daily_entry.movie_json)})
+    return jsonify({'pairs': json.loads(daily_entry.movie_json), 'today_date': str(target_date)})
 
 
 
@@ -229,6 +229,28 @@ def game_submit():
     )
 
     db.session.add(new_score)
+    if mode == 'daily' and game_date is not None:
+        try:
+            played_date = date.fromisoformat(game_date)
+
+            if played_date == date.today():
+                already_saved = DailyScore.query.filter_by(
+                    user_id=current_user.id,
+                    reset_date=played_date
+                ).first()
+                
+                if not already_saved:
+                    daily_score = DailyScore(
+                        user_id=current_user.id,
+                        reset_date=played_date,
+                        score=score_value,
+                        correct_answers=correct_answers,
+                        time_taken=round(time_taken, 1),
+                    )
+                    db.session.add(daily_score)
+        except ValueError:
+            pass
+
     db.session.commit()
 
     best_score = Score.query.filter_by(user_id=current_user.id).order_by(
