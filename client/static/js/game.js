@@ -30,6 +30,19 @@ function hide(id) { document.getElementById(id).classList.add('hidden'); }
       hide('screen-results');
       show('screen-game');
 
+      const modeTitle = document.getElementById('mode-title');
+      const modeSub = document.getElementById('mode-subtitle');
+
+      if (mode === 'daily') {
+        const isToday = (date === null && pass_date !== null);
+        document.getElementById('mode-title').textContent = isToday ? "Today's RateRace" : 'Previous RateRace';
+        document.getElementById('mode-subtitle').textContent = `Daily — ${pass_date}`;
+      } else {
+        document.getElementById('mode-title').textContent = 'Standard Mode';
+        document.getElementById('mode-subtitle').innerHTML = '★ &nbsp; Beat the Clock &nbsp; ★';
+
+      }
+
       loadRound();
     } else {
       alert("Failed to load movies. Ensure your database has enough entries!");
