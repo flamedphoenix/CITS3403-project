@@ -28,18 +28,28 @@
       <span class="text-amber-400">★</span>
       <span>Beat the Clock</span>
     </div>
-    <div class="flex justify-center" style="margin-top: 2.5rem;">
+    <div class="flex justify-center gap-4 flex-wrap" style="margin-top: 2.5rem;">
       <button onclick="startGame()"
         style="padding: 1rem 3.5rem 1rem 2.5rem;"
         class="flex items-center justify-center gap-3 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-sm hover:bg-amber-300 transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 shadow-retro">
         <span>▶</span><span>Start Game</span>
       </button>
 
+      <div class="flex shadow-retro">
+        <button onclick="startGame('daily')"
+          style="padding: 1rem 2.5rem;"
+          class="flex items-center justify-center gap-3 text-amber-400 font-extrabold uppercase tracking-widest text-sm border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition "> <!-- shadow-retro-->
+          <span>Daily Challenge</span>
+        </button>
         <button onclick="toggleDailyPanel()"
           style="padding: 1rem 0.5rem;"
           class="flex items-center justify-center text-amber-400 font-extrabold text-sm border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition"><!-- shadow-retro-->
           <span id="daily-toggle-arrow">▶</span>
         </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Daily panel — hidden by default -->
   <div id="daily-panel" class="hidden mt-8 w-full border-2 border-zinc-700 bg-black shadow-retro" style="max-width: 480px; margin-left: auto; margin-right: auto;">
     <div class="border-b-2 border-zinc-700 py-3">
@@ -177,7 +187,7 @@
       <button onclick="startGame()"
         style="padding: 0.75rem 2.5rem 0.75rem 1.75rem;"
         class="flex items-center justify-center gap-2 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 shadow-retro">
-        <span>▶</span><span>Play Again</span>
+        <span>▶</span><span>Play Standard</span>
       </button>
       <a href="{{ url_for('main.scoreboard') }}"
         style="padding: 0.75rem 1.75rem 0.75rem 2.5rem;"

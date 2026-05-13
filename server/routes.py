@@ -136,25 +136,42 @@ def get_random_movie_batch(num_pairs=10):
 @main.route('/api/game/questions')
 @login_required
 def game_questions():
-    maintain_movie_cache()
     pairs = get_random_movie_batch(10)
     if not pairs:
         return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
     return jsonify({'pairs': pairs})
 
+@main.route('/api/admin/maintain-cache')
+@login_required
+def trigger_maintenance():
+    maintain_movie_cache()
+    return jsonify({'status': 'ok'})
+
 
 @main.route('/api/game/daily')
 @login_required
 def game_daily():
-    today = date.today()
-    daily_entry = DailyMovieSet.query.filter_by(reset_date=today).first()
+    date_param = request.args.get('date', default=None, type=str)
+    if date_param:
+        try:
+            target_date = date.fromisoformat(date_param)
+        except ValueError:
+            return jsonify({'error': 'Invalid date format'}), 400
+        
+        daily_entry = DailyMovieSet.query.filter_by(reset_date=target_date).first()
+        if not daily_entry:
+            return jsonify({'error': f'No daily game exists for {date_param}'}), 404
+        return jsonify({'pairs': json.loads(daily_entry.movie_json), 'date': date_param})
+
+    target_date = date.today()
+    daily_entry = DailyMovieSet.query.filter_by(reset_date=target_date).first()
+
     if not daily_entry:
-        maintain_movie_cache()
         pairs = get_random_movie_batch(10)
         if not pairs:
             return jsonify({'error': 'Database too small for daily mode'}), 500
-            
-        new_set = DailyMovieSet(reset_date=today, movie_json=json.dumps(pairs))
+
+        new_set = DailyMovieSet(reset_date=target_date, movie_json=json.dumps(pairs))
         db.session.add(new_set)
         db.session.commit()
         return jsonify({'pairs': pairs})
@@ -201,6 +218,9 @@ def game_submit():
     score_value = data.get('score')
     correct_answers = data.get('correct_answers')
     time_taken = data.get('time_taken')
+    mode = data.get('mode', 'standard')
+    game_date = data.get('date')
+
 
     if any(v is None for v in [score_value, correct_answers, time_taken]):
         return jsonify({'error': 'Missing fields'}), 400
@@ -212,14 +232,9 @@ def game_submit():
     except (TypeError, ValueError):
         return jsonify({'error': 'Invalid data types'}), 400
 
-    if not (0 <= score_value <= 2000):
-        return jsonify({'error': 'Score out of valid range'}), 400
-
-    if not (0 <= correct_answers <= 10):
-        return jsonify({'error': 'correct_answers out of valid range'}), 400
-
-    if not (0 <= time_taken <= 100):
-        return jsonify({'error': 'time_taken out of valid range'}), 400
+    if not (0 <= score_value <= 2000): return jsonify({'error': 'Score out of valid range'}), 400
+    if not (0 <= correct_answers <= 10): return jsonify({'error': 'correct_answers out of valid range'}), 400
+    if not (0 <= time_taken <= 100): return jsonify({'error': 'time_taken out of valid range'}), 400
 
     new_score = Score(
         user_id=current_user.id,
@@ -331,7 +346,11 @@ def maintain_movie_cache():
         db.session.add(state)
         db.session.commit()
 
-    if now - state.last_refresh > timedelta(days=refresh_delta) or current_count < 30:
+    today = date.today()
+    last_refresh_date = state.last_refresh.date()
+    days_since_refresh = (today - last_refresh_date).days
+
+    if days_since_refresh >= refresh_delta or current_count < 30:
         new_data, next_pop, next_top = fetch_movies(state.next_popular_page, state.next_top_rated_page)
 
         for m_data in new_data:

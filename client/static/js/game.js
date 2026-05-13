@@ -7,7 +7,14 @@ let state = {};
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
+function startGame(mode = 'standard', date = null) {
   hide('daily-panel');
+  const endpoint = mode === 'daily' ? `/api/game/daily?date=${date ? `${date}` : ''}` : '/api/game/questions';
+  if (mode === 'daily') {
+    fetch('/api/admin/maintain-cache').catch(() => {});
+  }
+
+  console.log("Fetching movies from server...", endpoint);
   const xhttp = new XMLHttpRequest();
   xhttp.open("GET", endpoint, true);
   
@@ -15,6 +22,11 @@ function hide(id) { document.getElementById(id).classList.add('hidden'); }
     if (this.status === 200) {
       const response = JSON.parse(this.responseText);
       
+      pass_date = response.date;
+      if (date == null && response.today_date != null) {
+        pass_date = response.today_date;
+      }
+
       state = {
         round: 0,
         score: 0,
@@ -24,6 +36,8 @@ function hide(id) { document.getElementById(id).classList.add('hidden'); }
         timer: null,
         pairs: response.pairs,
         picked: false,
+        mode: mode,
+        date: pass_date || null,
       };
 
       hide('screen-start');
@@ -45,7 +59,8 @@ function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
       loadRound();
     } else {
-      alert("Failed to load movies. Ensure your database has enough entries!");
+      const err = JSON.parse(this.responseText);
+      alert(err.error || "Failed to load game.");
     }
   };
   
@@ -310,9 +325,9 @@ function endGame() {
   document.getElementById('result-time').textContent = `${formattedTimeTaken}s`;
   document.getElementById('result-accuracy').textContent = `${accuracy}%`;
   
-  submitScore(state.score, state.correct, Number(formattedTimeTaken));
+  submitScore(state.score, state.correct, Number(formattedTimeTaken), state.mode, state.date);
 
-  async function submitScore(score, correctAnswers, timeTaken) {
+  async function submitScore(score, correctAnswers, timeTaken, mode, gameDate) {
     try {
       const response = await fetch('/api/game/submit', {
         method: 'POST',
@@ -323,6 +338,8 @@ function endGame() {
           score: score,
           correct_answers: correctAnswers,
           time_taken: timeTaken,
+          mode: mode || 'standard',
+          date: gameDate || null,
         }),
       });
 
