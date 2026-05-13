@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}RateRace — Profile{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Courier Prime', monospace; }
+  h1, h2, h3, .retro-title { font-family: 'Special Elite', cursive; }
+  .shadow-retro { box-shadow: 4px 4px 0px #b45309; }
+  .text-shadow-retro { text-shadow: 2px 2px 0px #b45309; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="min-h-[calc(100vh-150px)] bg-zinc-950 px-6 py-12">
+
+  <div class="max-w-5xl mx-auto">
+
+    <a href="{{ url_for('main.index') }}"
+       class="inline-block mb-8 text-amber-400 px-6 py-3 font-extrabold uppercase tracking-widest text-xs border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition shadow-retro">
+      ← Home
+    </a>
+
+    <div class="text-center mb-10">
+      <p class="text-amber-400 uppercase tracking-widest text-xs font-bold mb-4">
+        ★ &nbsp; Player Profile &nbsp; ★
+      </p>
+
+      <h1 class="text-5xl md:text-6xl font-extrabold text-amber-400 uppercase tracking-tight text-shadow-retro">
+        {{ stats.username }}
+      </h1>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Score</p>
+        <p class="text-amber-400 font-extrabold text-4xl">
+          {% if stats.best_score is not none %}
+            {{ stats.best_score }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Leaderboard Rank</p>
+        <p class="text-amber-400 font-extrabold text-4xl">
+          {% if stats.rank %}
+            #{{ stats.rank }}
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Accuracy</p>
+        <p class="text-amber-400 font-extrabold text-4xl">
+          {% if stats.best_accuracy is not none %}
+            {{ stats.best_correct_answers }}/10 — {{ stats.best_accuracy }}%
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="border-2 border-zinc-700 bg-black p-6 shadow-retro">
+        <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Time Taken</p>
+        <p class="text-amber-400 font-extrabold text-4xl">
+          {% if stats.best_time_taken is not none %}
+            {{ stats.best_time_taken }}s
+          {% else %}
+            —
+          {% endif %}
+        </p>
+      </div>
+
+    </div>
+
+    <div class="border-2 border-amber-400 bg-black p-6 shadow-retro text-center">
+      <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Games Played</p>
+      <p class="text-amber-400 font-extrabold text-5xl">
+        {{ stats.games_played }}
+      </p>
+    </div>
+
+  </div>
+
+</section>
+{% endblock %}

@@ -64,6 +64,60 @@ def scoreboard():
     )
 
 
+@main.route('/profile')
+@login_required
+def profile():
+    games_played = Score.query.filter_by(user_id=current_user.id).count()
+
+    best_playthrough = Score.query.filter_by(user_id=current_user.id).order_by(
+        Score.score.desc(),
+        Score.time_taken.asc(),
+        Score.correct_answers.desc()
+    ).first()
+
+    leaderboard_users = User.query.join(Score).all()
+    leaderboard = []
+
+    for user in leaderboard_users:
+        user_best = Score.query.filter_by(user_id=user.id).order_by(
+            Score.score.desc(),
+            Score.time_taken.asc(),
+            Score.correct_answers.desc()
+        ).first()
+
+        if user_best:
+            leaderboard.append({
+                'user_id': user.id,
+                'score': user_best.score,
+                'time_taken': user_best.time_taken,
+                'correct_answers': user_best.correct_answers
+            })
+
+    leaderboard.sort(
+        key=lambda row: (
+            -row['score'],
+            row['time_taken'],
+            -row['correct_answers']
+        )
+    )
+
+    user_rank = None
+    for index, row in enumerate(leaderboard, start=1):
+        if row['user_id'] == current_user.id:
+            user_rank = index
+            break
+
+    profile_stats = {
+        'username': current_user.username,
+        'games_played': games_played,
+        'rank': user_rank,
+        'best_score': best_playthrough.score if best_playthrough else None,
+        'best_time_taken': best_playthrough.time_taken if best_playthrough else None,
+        'best_correct_answers': best_playthrough.correct_answers if best_playthrough else None,
+        'best_accuracy': round((best_playthrough.correct_answers / 10) * 100) if best_playthrough else None,
+    }
+
+    return render_template('profile.html', stats=profile_stats)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
