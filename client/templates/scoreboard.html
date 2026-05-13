@@ -33,23 +33,24 @@
 
   <!-- Leaderboard Table -->
   <div class="max-w-6xl w-full mx-auto flex-1 min-h-0 border-2 border-zinc-700 shadow-retro bg-black overflow-hidden">
-    <div class="max-h-[52vh] overflow-y-auto">
-      <table class="w-full text-left border-collapse">
+
+    <div class="max-h-[52vh] overflow-x-auto overflow-y-auto">
+      <table class="w-full text-left border-collapse min-w-[480px]">
         <thead class="sticky top-0 bg-black border-b-2 border-amber-400 z-10">
           <tr class="text-amber-400 uppercase tracking-widest text-xs">
-            <th class="px-5 py-4">Ranking</th>
-            <th class="px-5 py-4">Username</th>
-            <th class="px-5 py-4">Highest Score</th>
-            <th class="px-5 py-4">Best Time</th>
-            <th class="px-5 py-4">Accuracy</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Ranking</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Username</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Highest Score</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Best Time</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Accuracy</th>
             {% if current_user.is_authenticated %}
-            <th class="px-5 py-4">Challenge</th>
+            <th class="px-3 py-3 md:px-5 md:py-4">Challenge</th>
             {% endif %}
           </tr>
         </thead>
         <tbody id="leaderboard-body" class="text-amber-50 text-sm">
           <tr>
-            <td colspan="6" class="px-5 py-8 text-center text-zinc-600 uppercase tracking-widest text-xs">
+            <td colspan="6" class="px-3 py-8 text-center text-zinc-600 uppercase tracking-widest text-xs">
               Loading...
             </td>
           </tr>
