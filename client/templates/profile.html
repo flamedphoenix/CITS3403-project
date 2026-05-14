@@ -63,7 +63,7 @@
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Accuracy</p>
         <p class="text-amber-400 font-extrabold text-3xl">
           {% if stats.best_accuracy is not none %}
-            {{ stats.best_correct_answers }}/10 — {{ stats.best_accuracy }}%
+            {{ stats.best_correct_overall }}/10 — {{ stats.best_accuracy }}%
           {% else %}
             —
           {% endif %}
