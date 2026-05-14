@@ -1,8 +1,8 @@
-"""Add ChallengeSession model
+"""test-migr
 
-Revision ID: abdc257b7176
-Revises: 806b6f512089
-Create Date: 2026-05-12 03:55:59.395175
+Revision ID: 51ce216fe6f3
+Revises: 68b78093e89f
+Create Date: 2026-05-13 18:12:23.880236
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'abdc257b7176'
-down_revision = '806b6f512089'
+revision = '51ce216fe6f3'
+down_revision = '68b78093e89f'
 branch_labels = None
 depends_on = None
 
