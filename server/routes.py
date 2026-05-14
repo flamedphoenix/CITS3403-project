@@ -115,7 +115,7 @@ def game_questions():
         return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
     return jsonify({'pairs': pairs})
 
-@main.route('/api/admin/maintain-cache')
+@main.route('/api/game/maintain-cache')
 @login_required
 def trigger_maintenance():
     maintain_movie_cache()
