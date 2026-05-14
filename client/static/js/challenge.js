@@ -94,7 +94,7 @@ socket.on('round_result', (data) => {
   const feedbackSub  = document.getElementById('feedback-sub');
 
   if (myResult.is_correct) {
-    const tag = myResult.points >= 100 ? ' (first!)' : ' (second)';
+    const tag = myResult.is_first ? ' (first!)' : ' (second)';
     feedbackText.textContent = `✓ Correct! +${myResult.points}pts${tag}`;
     feedbackText.className   = 'text-2xl font-extrabold uppercase tracking-widest text-green-400 mb-1';
   } else if (myResult.choice === null) {

@@ -70,10 +70,12 @@ def _resolve_round(session_id):
         time_taken = p.get('time_taken', 10)
 
         if is_correct:
-            base = 100 if not first_correct_seen else 25
+            is_first = not first_correct_seen
+            base = 100 if is_first else 25
             first_correct_seen = True
             points = base + _speed_bonus(time_taken)
         else:
+            is_first = False
             points = 0
 
         state['players'][user_id]['score'] += points
@@ -83,6 +85,7 @@ def _resolve_round(session_id):
         round_results[user_id] = {
             'choice': p['choice'],
             'is_correct': is_correct,
+            'is_first': is_first,
             'points': points,
             'total_score': state['players'][user_id]['score'],
         }
