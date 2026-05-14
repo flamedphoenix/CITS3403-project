@@ -1,7 +1,7 @@
 """Add Score Table for History of Daily Game
 
 Revision ID: 68b78093e89f
-Revises: 806b6f512089
+Revises: abdc257b7176
 Create Date: 2026-05-13 13:07:43.609574
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '68b78093e89f'
-down_revision = '806b6f512089'
+down_revision = 'abdc257b7176'
 branch_labels = None
 depends_on = None
 
