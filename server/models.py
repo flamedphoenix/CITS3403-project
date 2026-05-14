@@ -62,6 +62,18 @@ class Score(db.Model):
     def __repr__(self):
         return f'<Score {self.score} by user {self.user_id}>'
 
+class DailyScore(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    reset_date = db.Column(db.Date, nullable=False, index=True)
+    score = db.Column(db.Integer, nullable=False)
+    correct_answers = db.Column(db.Integer, nullable=False)
+    time_taken = db.Column(db.Float, nullable=False)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'reset_date'),)
+
+    def __repr__(self):
+        return f'<DailyScore user={self.user_id} date={self.reset_date} score={self.score}>'
 
 class SystemState(db.Model):
     id = db.Column(db.Integer, primary_key=True)
