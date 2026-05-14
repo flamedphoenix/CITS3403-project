@@ -39,6 +39,111 @@ def challenge(session_id):
     return render_template('challenge.html', session_id=session_id)
 
 
+TOTAL_ROUNDS = 10
+
+
+def get_leaderboard_rows(limit=None):
+    """
+    Returns one leaderboard row per user.
+
+    Ranking is based on each user's best playthrough:
+    1. Highest score
+    2. Lower time taken
+    3. More correct answers
+    """
+
+    best_score_subquery = db.session.query(
+        Score.user_id.label('user_id'),
+        Score.score.label('best_score'),
+        Score.time_taken.label('best_time'),
+        Score.correct_answers.label('best_correct_answers'),
+        db.func.row_number().over(
+            partition_by=Score.user_id,
+            order_by=(
+                Score.score.desc(),
+                Score.time_taken.asc(),
+                Score.correct_answers.desc()
+            )
+        ).label('row_num')
+    ).subquery()
+
+    query = db.session.query(
+        User.id.label('user_id'),
+        User.username.label('username'),
+
+        best_score_subquery.c.best_score,
+        best_score_subquery.c.best_time,
+        best_score_subquery.c.best_correct_answers,
+
+        db.func.count(Score.id).label('games_played'),
+        db.func.avg(Score.score).label('average_points'),
+        db.func.avg(Score.correct_answers).label('average_correct_answers'),
+        db.func.avg(Score.time_taken).label('average_time_taken'),
+        db.func.max(Score.correct_answers).label('best_correct_overall'),
+    ).join(
+        best_score_subquery,
+        (best_score_subquery.c.user_id == User.id)
+        & (best_score_subquery.c.row_num == 1)
+    ).join(
+        Score,
+        Score.user_id == User.id
+    ).group_by(
+        User.id,
+        User.username,
+        best_score_subquery.c.best_score,
+        best_score_subquery.c.best_time,
+        best_score_subquery.c.best_correct_answers
+    ).order_by(
+        best_score_subquery.c.best_score.desc(),
+        best_score_subquery.c.best_time.asc(),
+        best_score_subquery.c.best_correct_answers.desc()
+    )
+
+    if limit:
+        query = query.limit(limit)
+
+    rows = query.all()
+
+    leaderboard = []
+
+    for rank, row in enumerate(rows, start=1):
+        best_playthrough_accuracy = round(
+            (row.best_correct_answers / TOTAL_ROUNDS) * 100
+        )
+
+        best_accuracy_overall = round(
+            (row.best_correct_overall / TOTAL_ROUNDS) * 100
+        )
+
+        average_accuracy = round(
+            (row.average_correct_answers / TOTAL_ROUNDS) * 100,
+            1
+        )
+
+        leaderboard.append({
+            'rank': rank,
+            'user_id': row.user_id,
+            'username': row.username,
+
+            # Best playthrough stats
+            'best_score': row.best_score,
+            'best_time': round(row.best_time, 1),
+            'best_correct_answers': row.best_correct_answers,
+            'best_playthrough_accuracy': best_playthrough_accuracy,
+
+            # Overall stats
+            'games_played': row.games_played,
+            'average_points': round(row.average_points),
+            'average_accuracy': average_accuracy,
+            'average_time_taken': round(row.average_time_taken, 1),
+
+            # True best accuracy, not just accuracy from highest-score game
+            'best_accuracy': best_accuracy_overall,
+            'best_correct_overall': row.best_correct_overall,
+        })
+
+    return leaderboard
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
