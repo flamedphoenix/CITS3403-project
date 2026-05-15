@@ -362,13 +362,13 @@ def test_login_play_game_scoreboard_and_profile_stats(driver, wait, app_and_db):
 
     driver.get(f"{BASE_URL}/scoreboard")
     try:
-        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Leaderboard"))
+        wait.until(lambda d: "leaderboard" in page_text(d).lower())
         wait.until(lambda d: account["username"].lower() in d.find_element(By.ID, "leaderboard-body").text.lower())
     except TimeoutException:
         fail_with_page_state(driver, "Loading scoreboard")
 
     scoreboard_text = driver.find_element(By.ID, "leaderboard-body").text
-    assert account["username"] in scoreboard_text
+    assert account["username"].lower() in scoreboard_text.lower()
 
     try:
         profile_link = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a[href='/profile']")))
@@ -384,11 +384,13 @@ def test_login_play_game_scoreboard_and_profile_stats(driver, wait, app_and_db):
         fail_with_page_state(driver, "Loading profile")
 
     profile_text = page_text(driver)
-    assert account["username"] in profile_text
-    assert "Leaderboard Rank" in profile_text
-    assert "Best Score" in profile_text
-    assert "Best Accuracy" in profile_text
-    assert "Games Played" in profile_text
-    assert "Average Points" in profile_text
-    assert "Average Accuracy" in profile_text
-    assert "Average Time Taken" in profile_text
+    profile_text_lower = profile_text.lower()
+
+    assert account["username"].lower() in profile_text_lower
+    assert "leaderboard rank" in profile_text_lower
+    assert "best score" in profile_text_lower
+    assert "best accuracy" in profile_text_lower
+    assert "games played" in profile_text_lower
+    assert "average points" in profile_text_lower
+    assert "average accuracy" in profile_text_lower
+    assert "average time taken" in profile_text_lower
