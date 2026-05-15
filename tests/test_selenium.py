@@ -279,14 +279,14 @@ def play_ten_round_game(driver: WebDriver, wait: WebDriverWait) -> int:
     driver.get(f"{BASE_URL}/game")
 
     try:
-        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Start Game"))
+        wait.until(lambda d: "start game" in page_text(d).lower())
     except TimeoutException:
         fail_with_page_state(driver, "Loading game page")
 
     speed_up_game_feedback(driver)
 
     start_button = wait.until(
-        EC.element_to_be_clickable((By.XPATH, "//button[contains(normalize-space(.), 'Start Game')]"))
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[onclick*='startGame']"))
     )
     safe_click(driver, start_button)
 
