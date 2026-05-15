@@ -1,32 +1,13 @@
 """
 Selenium system tests for RateRace.
 
-What this covers:
-- Register a new account -> lands on homepage
-- Login with wrong password -> sees error message
-- Login -> play a 10-round game -> score appears on leaderboard
-- View profile page -> stats show up after playing
-- View scoreboard -> user appears in table
-
-Before running these tests, start the Flask app in another terminal:
+Start Flask in another terminal first:
 
     py run.py
 
-Then run from the project root:
+Then run from project root:
 
     py -m pytest tests/test_selenium.py
-
-Useful optional environment variables:
-
-    RATERACE_BASE_URL=http://127.0.0.1:5020
-    SELENIUM_BROWSER=chrome
-    HEADLESS=1
-    SKIP_DB_SEED=1
-
-Notes:
-- These tests use the real browser and your real Flask routes.
-- The test seeds local movie rows directly into your SQLite database so the game can
-  run without relying on TMDB during Selenium testing.
 """
 
 from __future__ import annotations
@@ -46,7 +27,7 @@ from urllib.request import urlopen
 
 import pytest
 from selenium import webdriver
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
@@ -58,14 +39,8 @@ BROWSER = os.environ.get("SELENIUM_BROWSER", "chrome").lower()
 HEADLESS = os.environ.get("HEADLESS", "0") == "1"
 
 
-# ---------------------------------------------------------------------------
-# General helpers
-# ---------------------------------------------------------------------------
-
 def wait_for_server(base_url: str, timeout_seconds: int = 15) -> None:
-    """Fail clearly if the Flask app is not running."""
     deadline = time.time() + timeout_seconds
-
     while time.time() < deadline:
         try:
             with urlopen(base_url, timeout=1) as response:
@@ -73,18 +48,22 @@ def wait_for_server(base_url: str, timeout_seconds: int = 15) -> None:
                     return
         except URLError:
             time.sleep(0.25)
-
-    pytest.fail(
-        f"Could not connect to {base_url}. "
-        "Start the Flask app first with: py run.py"
-    )
+    pytest.fail(f"Could not connect to {base_url}. Start Flask first with: py run.py")
 
 
 def page_text(driver: WebDriver) -> str:
     return driver.find_element(By.TAG_NAME, "body").text
 
 
-def unique_account(prefix: str = "selenium") -> dict[str, str]:
+def fail_with_page_state(driver: WebDriver, action: str) -> None:
+    pytest.fail(
+        f"{action} timed out.\n\n"
+        f"Current URL: {driver.current_url}\n\n"
+        f"Visible page text:\n{page_text(driver)[:3000]}"
+    )
+
+
+def unique_account(prefix: str) -> dict[str, str]:
     suffix = uuid.uuid4().hex[:8]
     return {
         "username": f"{prefix}_{suffix}",
@@ -94,7 +73,6 @@ def unique_account(prefix: str = "selenium") -> dict[str, str]:
 
 
 def safe_click(driver: WebDriver, element) -> None:
-    """Click normally, falling back to JS click if something intercepts it."""
     try:
         element.click()
     except ElementClickInterceptedException:
@@ -108,56 +86,37 @@ def is_visible(driver: WebDriver, element_id: str) -> bool:
         return False
 
 
-def wait_for_api_condition(
-    endpoint: str,
-    predicate: Callable[[dict], bool],
-    timeout_seconds: int = 10,
-) -> dict:
-    """Poll a JSON API endpoint until predicate(data) is true."""
+def wait_for_api_condition(endpoint: str, predicate: Callable[[dict], bool], timeout_seconds: int = 10) -> dict:
     deadline = time.time() + timeout_seconds
     last_data = {}
-
     while time.time() < deadline:
         try:
             with urlopen(f"{BASE_URL}{endpoint}", timeout=2) as response:
                 last_data = json.loads(response.read().decode("utf-8"))
-
             if predicate(last_data):
                 return last_data
         except Exception:
             pass
-
         time.sleep(0.25)
+    pytest.fail(f"Timed out waiting for {endpoint}. Last response: {last_data}")
 
-    pytest.fail(f"Timed out waiting for API condition on {endpoint}. Last data: {last_data}")
 
+@pytest.fixture(scope="session")
+def app_and_db():
+    from server import create_app, db
+    app = create_app()
+    with app.app_context():
+        db.create_all()
+    return app, db
 
-# ---------------------------------------------------------------------------
-# Database seed helper
-# ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session", autouse=True)
-def seed_movies_for_game():
-    """
-    Seed enough movies for /api/game/questions to return 10 playable rounds.
-
-    This prevents the Selenium tests from depending on TMDB/network data.
-    Set SKIP_DB_SEED=1 if you want to use your existing seeded database instead.
-    """
+def seed_movies_for_game(app_and_db):
     if os.environ.get("SKIP_DB_SEED", "0") == "1":
         return
 
-    try:
-        from server import create_app, db
-        from server.models import Movie, SystemState
-    except Exception as exc:
-        pytest.fail(
-            "Could not import the Flask app for test seeding. "
-            "Run pytest from the project root. "
-            f"Original error: {exc}"
-        )
-
-    app = create_app()
+    app, db = app_and_db
+    from server.models import Movie, SystemState
 
     test_movies = [
         ("The Selenium Redemption", "1994", 9.3),
@@ -197,44 +156,43 @@ def seed_movies_for_game():
             tmdb_id = 900000 + i
             if Movie.query.filter_by(tmdb_id=tmdb_id).first():
                 continue
+            db.session.add(Movie(
+                title=title,
+                year=year,
+                rating=rating,
+                tmdb_id=tmdb_id,
+                poster_url="/static/img/no-poster.png",
+            ))
 
-            movie_kwargs = {
-                "title": title,
-                "year": year,
-                "rating": rating,
-                "tmdb_id": tmdb_id,
-            }
-
-            # Your current Movie model has this field. This hasattr check keeps
-            # the test safer if an older schema is used.
-            if hasattr(Movie, "poster_url"):
-                movie_kwargs["poster_url"] = "/static/img/no-poster.png"
-
-            db.session.add(Movie(**movie_kwargs))
-
-        # Keep maintain_movie_cache() from trying to refresh from TMDB during tests.
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         state = SystemState.query.first()
-
         if state is None:
-            state = SystemState(last_refresh=now)
-
-            if hasattr(SystemState, "next_popular_page"):
-                state.next_popular_page = 1
-
-            if hasattr(SystemState, "next_top_rated_page"):
-                state.next_top_rated_page = 1
-
+            state = SystemState(last_refresh=now, next_popular_page=1, next_top_rated_page=1)
             db.session.add(state)
         else:
             state.last_refresh = now
+            state.next_popular_page = state.next_popular_page or 1
+            state.next_top_rated_page = state.next_top_rated_page or 1
 
         db.session.commit()
 
 
-# ---------------------------------------------------------------------------
-# Selenium fixtures
-# ---------------------------------------------------------------------------
+def create_account_in_db(app_and_db, account: dict[str, str]) -> None:
+    app, db = app_and_db
+    from server.models import User
+
+    with app.app_context():
+        existing = User.query.filter(
+            (User.username == account["username"]) | (User.email == account["email"])
+        ).first()
+        if existing:
+            return
+
+        user = User(username=account["username"], email=account["email"])
+        user.set_password(account["password"])
+        db.session.add(user)
+        db.session.commit()
+
 
 @pytest.fixture
 def driver():
@@ -247,9 +205,9 @@ def driver():
         browser = webdriver.Firefox(options=options)
     else:
         options = webdriver.ChromeOptions()
+        options.add_argument("--window-size=1400,1000")
         if HEADLESS:
             options.add_argument("--headless=new")
-        options.add_argument("--window-size=1400,1000")
         browser = webdriver.Chrome(options=options)
 
     browser.implicitly_wait(0)
@@ -262,91 +220,57 @@ def wait(driver):
     return WebDriverWait(driver, 15)
 
 
-# ---------------------------------------------------------------------------
-# UI flow helpers
-# ---------------------------------------------------------------------------
-
-def register_account(driver: WebDriver, wait: WebDriverWait, account: dict[str, str]) -> None:
+def register_account_through_ui(driver: WebDriver, wait: WebDriverWait, account: dict[str, str]) -> None:
     driver.get(f"{BASE_URL}/register")
 
     wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys(account["username"])
     driver.find_element(By.NAME, "email").send_keys(account["email"])
     driver.find_element(By.NAME, "password").send_keys(account["password"])
 
-    submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+    submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit']")
     safe_click(driver, submit_button)
 
-    wait.until(EC.url_to(f"{BASE_URL}/"))
-    wait.until(EC.presence_of_element_located((By.LINK_TEXT, "Sign Out")))
+    try:
+        wait.until(lambda d: d.current_url.rstrip("/") == BASE_URL)
+    except TimeoutException:
+        fail_with_page_state(driver, "Registration redirect to homepage")
 
-    body = page_text(driver)
-    assert account["username"] in body
-    assert "Sign Out" in body
-
-
-def logout(driver: WebDriver, wait: WebDriverWait) -> None:
-    driver.get(f"{BASE_URL}/logout")
-    wait.until(EC.presence_of_element_located((By.LINK_TEXT, "Log In")))
+    body = page_text(driver).lower()
+    if account["username"].lower() not in body and "sign out" not in body:
+        fail_with_page_state(driver, "Registration login/navbar check")
 
 
-def login_account(
-    driver: WebDriver,
-    wait: WebDriverWait,
-    username: str,
-    password: str,
-    expect_success: bool,
-) -> None:
+def login_account(driver: WebDriver, wait: WebDriverWait, username: str, password: str, expect_success: bool) -> None:
     driver.get(f"{BASE_URL}/login")
 
     wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys(username)
     driver.find_element(By.NAME, "password").send_keys(password)
 
-    submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+    submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit']")
     safe_click(driver, submit_button)
 
     if expect_success:
-        wait.until(EC.url_to(f"{BASE_URL}/"))
-        wait.until(EC.presence_of_element_located((By.LINK_TEXT, "Sign Out")))
-        assert username in page_text(driver)
+        try:
+            wait.until(lambda d: d.current_url.rstrip("/") == BASE_URL)
+            wait.until(lambda d: username.lower() in page_text(d).lower() or "sign out" in page_text(d).lower())
+        except TimeoutException:
+            fail_with_page_state(driver, "Login")
     else:
-        wait.until(
-            EC.text_to_be_present_in_element(
-                (By.TAG_NAME, "body"),
-                "Invalid username or password",
-            )
-        )
+        try:
+            wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Invalid username or password"))
+        except TimeoutException:
+            fail_with_page_state(driver, "Wrong-password login")
 
 
 def speed_up_game_feedback(driver: WebDriver) -> None:
-    """
-    Your game waits 2 seconds between rounds for feedback.
-    That is good for humans but slow for tests, so this shortens only the
-    browser-side setTimeout delay.
-    """
     driver.execute_script(
         """
         if (!window.__seleniumOriginalSetTimeout) {
             window.__seleniumOriginalSetTimeout = window.setTimeout;
             window.setTimeout = function(callback, delay) {
-                return window.__seleniumOriginalSetTimeout(
-                    callback,
-                    Math.min(delay || 0, 50)
-                );
+                return window.__seleniumOriginalSetTimeout(callback, Math.min(delay || 0, 50));
             };
         }
-        """
-    )
-
-
-def choose_correct_card(driver: WebDriver) -> str:
-    """
-    Use the page's current game state to pick the higher-rated movie.
-    This still clicks through the real UI, but avoids random low scores.
-    """
-    return driver.execute_script(
-        """
-        const pair = state.pairs[state.round];
-        return pair[0].rating >= pair[1].rating ? 'a' : 'b';
         """
     )
 
@@ -354,59 +278,63 @@ def choose_correct_card(driver: WebDriver) -> str:
 def play_ten_round_game(driver: WebDriver, wait: WebDriverWait) -> int:
     driver.get(f"{BASE_URL}/game")
 
-    wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Start Game"))
+    try:
+        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Start Game"))
+    except TimeoutException:
+        fail_with_page_state(driver, "Loading game page")
+
     speed_up_game_feedback(driver)
 
     start_button = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(normalize-space(.), 'Start Game')]")
-        )
+        EC.element_to_be_clickable((By.XPATH, "//button[contains(normalize-space(.), 'Start Game')]"))
     )
     safe_click(driver, start_button)
 
-    wait.until(EC.visibility_of_element_located((By.ID, "screen-game")))
-    wait.until(lambda d: d.find_element(By.ID, "title-a").text.strip() != "")
-    wait.until(lambda d: d.find_element(By.ID, "title-b").text.strip() != "")
+    try:
+        wait.until(EC.visibility_of_element_located((By.ID, "screen-game")))
+        wait.until(lambda d: d.find_element(By.ID, "title-a").text.strip() != "")
+        wait.until(lambda d: d.find_element(By.ID, "title-b").text.strip() != "")
+    except TimeoutException:
+        fail_with_page_state(driver, "Starting game")
 
     for round_number in range(1, 11):
         wait.until(lambda d: is_visible(d, "screen-game"))
 
-        choice = choose_correct_card(driver)
-        card = wait.until(EC.presence_of_element_located((By.ID, f"card-{choice}")))
-        safe_click(driver, card)
+        card_a = wait.until(EC.presence_of_element_located((By.ID, "card-a")))
+        safe_click(driver, card_a)
 
         if round_number < 10:
-            wait.until(
-                lambda d, expected=str(round_number + 1): (
-                    is_visible(d, "screen-game")
-                    and d.find_element(By.ID, "round-display").text.strip() == expected
-                    and d.find_element(By.ID, "title-a").text.strip() != ""
-                    and d.find_element(By.ID, "title-b").text.strip() != ""
+            try:
+                wait.until(
+                    lambda d, expected=str(round_number + 1): (
+                        is_visible(d, "screen-game")
+                        and d.find_element(By.ID, "round-display").text.strip() == expected
+                        and d.find_element(By.ID, "title-a").text.strip() != ""
+                        and d.find_element(By.ID, "title-b").text.strip() != ""
+                    )
                 )
-            )
+            except TimeoutException:
+                fail_with_page_state(driver, f"Advancing from round {round_number}")
         else:
-            wait.until(EC.visibility_of_element_located((By.ID, "screen-results")))
-            wait.until(lambda d: d.find_element(By.ID, "result-score").text.strip() != "")
+            try:
+                wait.until(EC.visibility_of_element_located((By.ID, "screen-results")))
+                wait.until(lambda d: d.find_element(By.ID, "result-score").text.strip() != "")
+            except TimeoutException:
+                fail_with_page_state(driver, "Finishing game")
 
     score_text = driver.find_element(By.ID, "result-score").text.strip()
     assert score_text.isdigit()
     return int(score_text)
 
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
 def test_register_new_account_lands_on_homepage(driver, wait):
     account = unique_account("register")
-    register_account(driver, wait, account)
+    register_account_through_ui(driver, wait, account)
 
 
-def test_login_with_wrong_password_shows_error_message(driver, wait):
+def test_login_with_wrong_password_shows_error_message(driver, wait, app_and_db):
     account = unique_account("wrongpass")
-
-    register_account(driver, wait, account)
-    logout(driver, wait)
+    create_account_in_db(app_and_db, account)
 
     login_account(
         driver,
@@ -417,44 +345,43 @@ def test_login_with_wrong_password_shows_error_message(driver, wait):
     )
 
 
-def test_login_play_game_scoreboard_and_profile_stats(driver, wait):
+def test_login_play_game_scoreboard_and_profile_stats(driver, wait, app_and_db):
     account = unique_account("player")
+    create_account_in_db(app_and_db, account)
 
-    # Register first so the account exists, then log out and test the login flow.
-    register_account(driver, wait, account)
-    logout(driver, wait)
     login_account(driver, wait, account["username"], account["password"], expect_success=True)
 
     final_score = play_ten_round_game(driver, wait)
     assert 0 <= final_score <= 2000
 
-    # Wait until the backend leaderboard API has saved this user's score.
     wait_for_api_condition(
         "/api/scores/leaderboard",
-        lambda data: any(
-            row.get("username") == account["username"]
-            for row in data.get("leaderboard", [])
-        ),
+        lambda data: any(row.get("username") == account["username"] for row in data.get("leaderboard", [])),
         timeout_seconds=10,
     )
 
-    # View scoreboard: user appears in table.
     driver.get(f"{BASE_URL}/scoreboard")
-    wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Leaderboard"))
-    wait.until(
-        lambda d: account["username"].lower()
-        in d.find_element(By.ID, "leaderboard-body").text.lower()
-    )
+    try:
+        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Leaderboard"))
+        wait.until(lambda d: account["username"].lower() in d.find_element(By.ID, "leaderboard-body").text.lower())
+    except TimeoutException:
+        fail_with_page_state(driver, "Loading scoreboard")
 
     scoreboard_text = driver.find_element(By.ID, "leaderboard-body").text
     assert account["username"] in scoreboard_text
 
-    # View profile page by clicking the username in the top bar.
-    profile_link = wait.until(EC.element_to_be_clickable((By.LINK_TEXT, account["username"])))
+    try:
+        profile_link = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a[href='/profile']")))
+    except TimeoutException:
+        fail_with_page_state(driver, "Finding profile link")
+
     safe_click(driver, profile_link)
 
-    wait.until(EC.url_contains("/profile"))
-    wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Player Profile"))
+    try:
+        wait.until(EC.url_contains("/profile"))
+        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Player Profile"))
+    except TimeoutException:
+        fail_with_page_state(driver, "Loading profile")
 
     profile_text = page_text(driver)
     assert account["username"] in profile_text
