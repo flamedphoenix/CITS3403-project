@@ -379,7 +379,7 @@ def test_login_play_game_scoreboard_and_profile_stats(driver, wait, app_and_db):
 
     try:
         wait.until(EC.url_contains("/profile"))
-        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Player Profile"))
+        wait.until(lambda d: "player profile" in page_text(d).lower())
     except TimeoutException:
         fail_with_page_state(driver, "Loading profile")
 
