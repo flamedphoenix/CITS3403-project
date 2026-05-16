@@ -54,7 +54,11 @@ function renderLeaderboard(entries) {
     return `
       <tr class="${rowClass}">
         <td class="px-5 py-4 text-amber-400 font-bold">${medal} #${row.rank}</td>
-        <td class="px-5 py-4 font-bold uppercase ${isMe ? 'text-amber-400' : ''}">${row.username}</td>
+        <td class="px-5 py-4 font-bold uppercase ${isMe ? 'text-amber-400' : ''}">
+          <a href="${row.profile_url}" class="hover:text-amber-400 underline underline-offset-4">
+            ${row.username}
+          </a>
+        </td>
         <td class="px-5 py-4">${row.best_score}</td>
         <td class="px-5 py-4">${row.best_time}s</td>
         <td class="px-5 py-4">${row.avg_accuracy}</td>

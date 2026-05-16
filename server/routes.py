@@ -144,19 +144,19 @@ def get_leaderboard_rows(limit=None):
 
     return leaderboard
 
-@main.route('/profile')
-@login_required
-def profile():
+def build_profile_stats(user_id):
+    user = User.query.get_or_404(user_id)
+
     leaderboard = get_leaderboard_rows()
 
     user_row = next(
-        (row for row in leaderboard if row['user_id'] == current_user.id),
+        (row for row in leaderboard if row['user_id'] == user.id),
         None
     )
 
     if user_row:
-        profile_stats = {
-            'username': current_user.username,
+        return {
+            'username': user.username,
 
             'rank': user_row['rank'],
             'games_played': user_row['games_played'],
@@ -165,10 +165,10 @@ def profile():
             'best_time_taken': user_row['best_time'],
             'best_correct_answers': user_row['best_correct_answers'],
 
-            # This is accuracy from the highest-scoring playthrough
+            # Accuracy from the highest-scoring playthrough
             'best_playthrough_accuracy': user_row['best_playthrough_accuracy'],
 
-            # This is the user's actual best accuracy across all games
+            # True best accuracy across all games
             'best_accuracy': user_row['best_accuracy'],
             'best_correct_overall': user_row['best_correct_overall'],
 
@@ -176,27 +176,38 @@ def profile():
             'average_accuracy': user_row['average_accuracy'],
             'average_time_taken': user_row['average_time_taken'],
         }
-    else:
-        profile_stats = {
-            'username': current_user.username,
 
-            'rank': None,
-            'games_played': 0,
+    return {
+        'username': user.username,
 
-            'best_score': None,
-            'best_time_taken': None,
-            'best_correct_answers': None,
+        'rank': None,
+        'games_played': 0,
 
-            'best_playthrough_accuracy': None,
+        'best_score': None,
+        'best_time_taken': None,
+        'best_correct_answers': None,
 
-            'best_accuracy': None,
-            'best_correct_overall': None,
+        'best_playthrough_accuracy': None,
 
-            'average_points': None,
-            'average_accuracy': None,
-            'average_time_taken': None,
-        }
+        'best_accuracy': None,
+        'best_correct_overall': None,
 
+        'average_points': None,
+        'average_accuracy': None,
+        'average_time_taken': None,
+    }
+
+
+@main.route('/profile')
+@login_required
+def profile():
+    return redirect(url_for('main.player_profile', user_id=current_user.id))
+
+
+@main.route('/profile/<int:user_id>')
+@login_required
+def player_profile(user_id):
+    profile_stats = build_profile_stats(user_id)
     return render_template('profile.html', stats=profile_stats)
 
 @main.route('/login', methods=['GET', 'POST'])
@@ -447,6 +458,7 @@ def leaderboard():
                 'rank': row['rank'],
                 'user_id': row['user_id'],
                 'username': row['username'],
+                'profile_url': url_for('main.player_profile', user_id=row['user_id']),
 
                 'best_score': row['best_score'],
                 'best_time': row['best_time'],
