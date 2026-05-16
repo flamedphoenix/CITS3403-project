@@ -1,0 +1,58 @@
+import unittest
+from datetime import date, datetime, timezone
+from server import create_app, db
+from server.models import User, Score, DailyScore, ChallengeSession
+
+class TestConfig:
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = False
+    SECRET_KEY = 'testing-secret-key'
+
+class BaseTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(TestConfig)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
+
+    def _create_user(self, username='tester', email='test@example.com', password='Password123'):
+        user = User(username=username, email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        return user.id
+
+    def _login(self, username='tester', password='Password123'):
+        return self.client.post('/login', data={
+            'username': username, 'password': password
+        }, follow_redirects=True)
+    
+
+    def _create_and_login(self, username='testuser', password='testpass123'):
+        self._create_user(username, password)
+        self._login(username, password)
+
+    def _create_score(self, user_id, score=500, correct_answers=5, time_taken=30.0):
+        new_score = Score(user_id=user_id, score=score, correct_answers=correct_answers, time_taken=time_taken)
+        db.session.add(new_score)
+        db.session.commit()
+        return new_score.id
+    
+    def _create_daily_score(self, user_id, score=100, correct_answers=3, time_taken=20.0, reset_date=None):
+        daily_score = DailyScore(user_id=user_id, score=score, correct_answers=correct_answers, time_taken=time_taken, reset_date=reset_date or date.today())
+        db.session.add(daily_score)
+        db.session.commit()
+        return daily_score.id
+
+    
+
+if __name__ == '__main__':
+    unittest.main()
