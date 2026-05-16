@@ -1,21 +1,26 @@
-# CITS3403-project
-  
-### Simple How-To  
-#### Install requirements.txt:  
-Run ```conda activate ur-env-name``` (reccomended, not necessary)  
-Run ```pip install -r requirements.txt```  
-  
+<div align="center">
+    <h1>★ RateRace — Which Movie Rates Higher?</h1>
+    <span style="font-size: 1.25em; font-weight: bold;">
+        <p style="margin-bottom: 0;">Two films. One question.</p>
+        <p style="margin-top: 0;">Guess which has the higher IMDb score and climb the ranks.</p>
+    </span>
+</div>
+
+### Cits3403 Project
+### Design and Architecture
+**Group Members**
+| UWA ID   | Name            | Github Username |
+|----------|-----------------|-----------------|
+| 24273259 | Kush Patel      | KushPatel-18    |
+|          | Dean Kalweit    | flamedphoenix   |
+|          | Roland Levinson | ggtroland       |
+### Simple Launch Instructions
+#### Set up Initial Project Files:  
 #### In its own terminal for compiling tailwind:  
 Run ```npm run watch:css```  
-  
-#### For initial set up:  
-Run ```flask db init```   
-Run ```flask db migrate -m "users table"```  
-Run ```flask db upgrade ```  
-  
-#### For other updates to model:  
-Run ```flask db migrate -m "change description"```  
-Run ```flask db upgrade```  
-  
-#### For running development server:  
-Run ```flask run```  
+#### Initialise and Launch - in it's own terminal:  
+#### Database Management / Updates
+#### Running the Tests
+<div align="center">
+★   RateRace — CITS3403 Project — 2026   ★
+</div>
