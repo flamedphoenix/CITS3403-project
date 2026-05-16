@@ -78,23 +78,33 @@ or
 Run ```HEADLESS=1 python3 -m pytest tests/test_selenium.py``` if you don't want browser window      
 
 
-### Preview
-#### Home / Index Page
-![Index Page]()
+### Web Page Previews
+#### Standard Game Pages
 
-#### Game Screen and Game Start Screen (with Daily Game History Panel)
-
-| Game Screen            | Game Start Screen        |
+| Standard Game Screen   | Game Start Screen with Daily Game History Panel       |
 |------------------------|--------------------------|
-| ![Game Page]()         | ![History Panel]()       |
+| <img width="1470" height="767" alt="Game-Standard" src="https://github.com/user-attachments/assets/bf12edfd-1111-4ac2-814a-9c4a216b9b0c" />        | <img width="1469" height="767" alt="Daily-history-panel-game" src="https://github.com/user-attachments/assets/de6a41d7-2aac-41ad-9e8f-6368c3a425c5" />|
 
-#### Leaderboard and Sending / Recieving Challenge
-| Leaderboard Page              | Challenge Status                |
+#### Leaderboard Pages
+| Leaderboard Page and Challenge Page  | Challenge Game |
 |-------------------------------|---------------------------------|
-| ![Leaderboard Page]()         | ![Challenge Recieve / ]()       |
+| <img width="1463" height="753" alt="Leaderboard-and-Challenge" src="https://github.com/user-attachments/assets/ff72a56f-d935-4a04-91d2-41ebc986edc9" />         | <img width="1456" height="756" alt="Challenge-Game" src="https://github.com/user-attachments/assets/4d051200-cb2d-4575-9b4f-14eabc3877ad" />       |
 
 #### Daily Challenge
-![Daily Challenge]()
+|           Daily Challenge                                                                                                                   |
+|---------------------------------------------------------------------------------------------------------------------------------------------|
+|<img width="1466" height="766" alt="Daily-Challenge" src="https://github.com/user-attachments/assets/75e331d9-8b5d-4758-8c0e-b68b72124dda" />|
+
+<details>
+<summary><h3><strong>Click to See User Profile Page</strong></h3></summary>
+    
+![User Profile Page](https://github.com/user-attachments/assets/7962836c-394e-42b0-9222-4006b05a338a)
+</details>
+<details>
+<summary><h3><strong>Click to See Home / Index Page</strong></h3></summary>
+    
+![Index page](https://github.com/user-attachments/assets/c4c4705c-3c5e-496e-94fd-18ac0e72e811)
+</details>
 
 <div align="center">
 ★   RateRace — CITS3403 Project — 2026   ★
