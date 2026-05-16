@@ -392,19 +392,19 @@ class TestProfile(BaseTestCase):
 
     def test_loads_for_user_with_no_scores(self):
         self._create_and_login()
-        resp = self.client.get('/profile')
+        resp = self.client.get('/profile', follow_redirects=True)
         self.assertEqual(resp.status_code, 200)
 
     def test_shows_username_in_page(self):
         self._create_and_login('myplayer')
-        resp = self.client.get('/profile')
+        resp = self.client.get('/profile', follow_redirects=True)
         self.assertIn(b'myplayer', resp.data)
 
     def test_loads_for_user_with_scores(self):
         user_id = self._create_user()
         self._login()
         self._add_score(user_id, 750, 8, 35.0)
-        resp = self.client.get('/profile')
+        resp = self.client.get('/profile', follow_redirects=True)
         self.assertEqual(resp.status_code, 200)
 
     def test_profile_does_not_show_other_users_data(self):
@@ -413,7 +413,7 @@ class TestProfile(BaseTestCase):
         self._add_score(id1, 1500, 10, 10.0)
         self._add_score(id2, 200, 3, 80.0)
         self._login('player2', 'password02')
-        resp = self.client.get('/profile')
+        resp = self.client.get('/profile', follow_redirects=True)
         # player2's username should appear, not player1's score as their own
         self.assertIn(b'player2', resp.data)
         self.assertEqual(resp.status_code, 200)
