@@ -65,6 +65,19 @@ Run ```flask --app run db downgrade```
 
 
 #### Running the Tests
+**UnitTests for Game, API, Models, and User Auth**:     
+In a separate terminal run:        
+```
+python3 -m unittest tests/test_models_auth.py
+python3 -m unittest tests/test_game_api.py
+```
+
+**System Tests**    
+Run ```python3 -m pytest tests/test_selenium.py``` if you want to see the test windows      
+or
+Run ```HEADLESS=1 python3 -m pytest tests/test_selenium.py``` if you don't want browser window      
+
+
 <div align="center">
 ★   RateRace — CITS3403 Project — 2026   ★
 </div>
