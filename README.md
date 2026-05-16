@@ -78,6 +78,24 @@ or
 Run ```HEADLESS=1 python3 -m pytest tests/test_selenium.py``` if you don't want browser window      
 
 
+### Preview
+#### Home / Index Page
+![Index Page]()
+
+#### Game Screen and Game Start Screen (with Daily Game History Panel)
+
+| Game Screen            | Game Start Screen        |
+|------------------------|--------------------------|
+| ![Game Page]()         | ![History Panel]()       |
+
+#### Leaderboard and Sending / Recieving Challenge
+| Leaderboard Page              | Challenge Status                |
+|-------------------------------|---------------------------------|
+| ![Leaderboard Page]()         | ![Challenge Recieve / ]()       |
+
+#### Daily Challenge
+![Daily Challenge]()
+
 <div align="center">
 ★   RateRace — CITS3403 Project — 2026   ★
 </div>
