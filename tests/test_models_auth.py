@@ -52,7 +52,39 @@ class BaseTestCase(unittest.TestCase):
         db.session.commit()
         return daily_score.id
 
-    
+
+# ---------------------------------------------------------------------------
+# User model: password hashing, fields, uniqueness
+# ---------------------------------------------------------------------------
+class TestUserModel(BaseTestCase):
+    def test_password_hashing(self):
+        user = User(username='alice', email='alice@test.com')
+        user.set_password('mysecretpass')
+        self.assertNotEqual(user.password_hash, 'mysecretpass')
+        self.assertIsNotNone(user.password_hash)
+
+    def test_check_password_correct(self):
+        user = User(username='bob', email='bob@test.com')
+        user.set_password('mypassword')
+        self.assertTrue(user.check_password('mypassword'))
+        self.assertFalse(user.check_password('wrongpassword'))
+
+    def test_check_password_empty(self):
+        user = User(username='charlie', email='charlie@test.com')
+        user.set_password('mypassword')
+        self.assertFalse(user.check_password(''))
+
+    def test_check_username_uniqueness(self):
+        self._create_user('user1', 'password1')
+        with self.assertRaises(Exception):
+            self._create_user('user1', 'password2')
+
+    def test_check_email_uniqueness(self):
+        self._create_user('user2', email='user2@test.com', password='password1')
+        with self.assertRaises(Exception):
+            self._create_user('user3', email='user2@test.com', password='password2')
+
+
 
 if __name__ == '__main__':
     unittest.main()
