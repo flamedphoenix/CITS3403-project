@@ -111,6 +111,34 @@ class TestScoreModel(BaseTestCase):
         self.assertEqual(Score.query.get(score_id).user.username, 'fktestuser')
 
 
+# ---------------------------------------------------------------------------
+# DailyScore model: uniqueness constraint (one score per user per day)
+# ---------------------------------------------------------------------------
+class TestDailyScoreModel(BaseTestCase):
+    def test_daily_score_creation(self):
+        user_id = self._create_user()
+        daily_score_id = self._create_daily_score(user_id=user_id, reset_date=date.today(), score=600, correct_answers=7, time_taken=38.0)
+        saved = DailyScore.query.get(daily_score_id)
+        self.assertIsNotNone(saved)
+        self.assertEqual(saved.score, 600)
+        self.assertEqual(saved.correct_answers, 7)
+        self.assertEqual(saved.time_taken, 38.0)
+        self.assertEqual(saved.user_id, user_id)
+ 
+    def test_uniqueness_constraint_prevents_duplicate_per_day(self):
+        user_id = self._create_user()
+        self._create_daily_score(user_id=user_id, reset_date=date.today())
+        with self.assertRaises(Exception):
+            self._create_daily_score(user_id=user_id, reset_date=date.today())
+ 
+    def test_daily_score_user_fk_relationship(self):
+        user_id = self._create_user('martinez')
+        daily_score_id = self._create_daily_score(user_id=user_id)
+        saved = DailyScore.query.get(daily_score_id)
+        self.assertEqual(saved.user.username, 'martinez')
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
