@@ -205,6 +205,64 @@ class TestChallengeSessionModel(BaseTestCase):
         self.assertEqual(ChallengeSession.query.get(session_id).winner_id, id2)
  
 
+# ---------------------------------------------------------------------------
+# Auth routes: POST /register, POST /login, GET /logout
+# ---------------------------------------------------------------------------
+class TestRegisterRoute(BaseTestCase):
+    def _register(self, username='newuser', email='new@test.com', password='securepass123'):
+        return self.client.post('/register', data={
+            'username': username,
+            'email': email,
+            'password': password,
+        }, follow_redirects=True)
+    
+    def test_successful_registration_redirects_to_index(self):
+        resp = self._register()
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'RateRace', resp.data)
+        self.assertIsNotNone(User.query.filter_by(username='newuser').first())
+    
+    def test_duplicate_username_flashes_error(self):
+        self._create_user('takenuser', email='taken@test.com')
+        resp = self._register(username='takenuser', email='other@test.com')
+        self.assertIn(b'already exists', resp.data)
+ 
+    def test_duplicate_email_flashes_error(self):
+        self._create_user('someuser', email='shared@test.com')
+        resp = self._register(username='otheruser', email='shared@test.com')
+        self.assertIn(b'already exists', resp.data)
+
+class TestLoginRoute(BaseTestCase):
+    def _post_login(self, username, password):
+        return self.client.post('/login', data={
+            'username': username,
+            'password': password,
+        }, follow_redirects=True)
+ 
+    def test_valid_login_redirect_to_index(self):
+        self._create_user('loginuserindex')
+        resp = self._post_login('loginuserindex', 'testpass123')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'RateRace', resp.data)
+ 
+    def test_invalid_password_flashes_error(self):
+        self._create_user('loginuserwrongpass')
+        resp = self._post_login('loginuserwrongpass', 'wrongpassword')
+        self.assertIn(b'Invalid username or password', resp.data)
+
+class TestLogoutRoute(BaseTestCase):
+    def test_logout_clears_session(self):
+        self._create_and_login()
+        self.client.get('/logout')
+        # /login no longer redirects away, confirming current_user is anonymous
+        resp = self.client.get('/login', follow_redirects=False)
+        self.assertEqual(resp.status_code, 200)
+
+        game_resp = self.client.get('/game')
+        self.assertEqual(game_resp.status_code, 302)
+
+
+    
 
 if __name__ == '__main__':
     unittest.main()
