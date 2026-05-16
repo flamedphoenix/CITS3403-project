@@ -85,6 +85,32 @@ class TestUserModel(BaseTestCase):
             self._create_user('user3', email='user2@test.com', password='password2')
 
 
+# ---------------------------------------------------------------------------
+# Score model: creation, correct field types, foreign key to User
+# ---------------------------------------------------------------------------
+class TestScoreModel(BaseTestCase):
+    def test_score_creation_valid_fields(self):
+        user_id = self._create_user()
+        score_id = self._create_score(user_id, score=750, correct_answers=8, time_taken=42.5)
+        saved = Score.query.get(score_id)
+        self.assertEqual(saved.score, 750)
+        self.assertEqual(saved.correct_answers, 8)
+        self.assertEqual(saved.time_taken, 42.5)
+
+    def test_score_fields_type_correctness(self):
+        user_id = self._create_user()
+        score_id = self._create_score(user_id, time_taken=30.7)
+        self.assertIsInstance(Score.query.get(score_id).time_taken, float)
+        self.assertIsInstance(Score.query.get(score_id).correct_answers, int)
+        self.assertIsInstance(Score.query.get(score_id).score, int)
+        self.assertIsInstance(Score.query.get(score_id).timestamp, datetime)
+
+    def test_score_user_fk_relationship(self):
+        user_id = self._create_user('fktestuser')
+        score_id = self._create_score(user_id)
+        self.assertEqual(Score.query.get(score_id).user.username, 'fktestuser')
+
+
 
 if __name__ == '__main__':
     unittest.main()
