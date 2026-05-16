@@ -396,6 +396,7 @@ def leaderboard():
                 'rank': row['rank'],
                 'user_id': row['user_id'],
                 'username': row['username'],
+                'profile_url': url_for('main.player_profile', user_id=row['user_id']),
 
                 'best_score': row['best_score'],
                 'best_time': row['best_time'],
