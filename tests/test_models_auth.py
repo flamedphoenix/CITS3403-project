@@ -139,6 +139,72 @@ class TestDailyScoreModel(BaseTestCase):
 
 
 
+# ---------------------------------------------------------------------------
+# ChallengeSession model: status transitions, foreign keys
+# ---------------------------------------------------------------------------
+class TestChallengeSessionModel(BaseTestCase):
+    def _create_two_users(self):
+        id1 = self._create_user('challenger', email='challenger@test.com')
+        id2 = self._create_user('opponent', email='opponent@test.com')
+        return id1, id2
+ 
+    def _make_session(self, challenger_id, opponent_id, status='pending'):
+        session = ChallengeSession(challenger_id=challenger_id, opponent_id=opponent_id, status=status)
+        db.session.add(session)
+        db.session.commit()
+        return session.id
+ 
+    def test_default_status_is_pending(self):
+        id1, id2 = self._create_two_users()
+        session_id = self._make_session(id1, id2)
+        self.assertEqual(ChallengeSession.query.get(session_id).status, 'pending')
+        
+    def test_transition_pending_to_active_to_completed_and_winner(self):
+        id1, id2 = self._create_two_users()
+        session_id = self._make_session(id1, id2)
+        session = ChallengeSession.query.get(session_id)
+        session.status = 'active'
+        db.session.commit()
+        self.assertEqual(ChallengeSession.query.get(session_id).status, 'active')
+        session.status = 'completed'
+        db.session.commit()
+
+        session = ChallengeSession.query.get(session_id)
+        session.winner_id = id1
+        db.session.commit()
+        saved = ChallengeSession.query.get(session_id)
+        self.assertEqual(saved.status, 'completed')
+        self.assertEqual(saved.winner_id, id1)
+
+    def test_transition_pending_to_declined(self):
+        id1, id2 = self._create_two_users()
+        session_id = self._make_session(id1, id2)
+        session = ChallengeSession.query.get(session_id)
+        session.status = 'declined'
+        db.session.commit()
+        self.assertEqual(ChallengeSession.query.get(session_id).status, 'declined')
+ 
+    def test_challenger_opponent_user_fk_relationship(self):
+        id1, id2 = self._create_two_users()
+        session_id = self._make_session(id1, id2)
+        self.assertEqual(ChallengeSession.query.get(session_id).challenger.username, 'challenger')
+        self.assertEqual(ChallengeSession.query.get(session_id).opponent.username, 'opponent')
+
+    def test_winner_fk_can_be_null(self):
+        id1, id2 = self._create_two_users()
+        session_id = self._make_session(id1, id2)
+        self.assertIsNone(ChallengeSession.query.get(session_id).winner_id)
+
+    def test_winner_user_fk_relationship(self):
+        id1, id2 = self._create_two_users()
+        session_id = self._make_session(id1, id2, status='active')
+        session = ChallengeSession.query.get(session_id)
+        session.status = 'completed'
+        session.winner_id = id2
+        db.session.commit()
+        self.assertEqual(ChallengeSession.query.get(session_id).winner_id, id2)
+ 
+
 
 if __name__ == '__main__':
     unittest.main()
