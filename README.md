@@ -31,12 +31,39 @@ On the frontend, this application is built with HTML, Tailwind CSS, and JavaScri
 | 24273259 | Kush Patel      | KushPatel-18    |
 |          | Dean Kalweit    | flamedphoenix   |
 |          | Roland Levinson | ggtroland       |
+
+
 ### Simple Launch Instructions
 #### Set up Initial Project Files:  
+Run ```git clone https://github.com/flamedphoenix/CITS3403-project``` in target directory to clone the repository, and then `cd CITS3403-project` 
+Run ```python3 -m venv app-env``` to set-up virtual environment (reccomended, not necessary)    
+Activate the environment on:
+* Windows:
+```venv\Scripts\activate``` 
+* Mac / Linux:  
+```source venv/bin/activate``` 
+
+Run ```pip install -r requirements.txt```  to install dependencies    
+Create ```.env``` in project root to start configuring environment, and add `SECRET_KEY=` and `TMDB_API_KEY=` with your respective keys at the end  
+  
 #### In its own terminal for compiling tailwind:  
+If not installed already: 
+Run ```npm install```, and then run
 Run ```npm run watch:css```  
+  
 #### Initialise and Launch - in it's own terminal:  
+Run `python3 run.py` - already configured to apply database migrations
+
+Visit http://127.0.0.1:5020 to start playing!
+
 #### Database Management / Updates
+If models are updated in `models.py`, then in project root directory,       
+Run ```flask --app run db migrate -m "change description"```    
+Run ```flask --app run db upgrade``` (or run `run.py` again)    
+If models need to be downgraded:    
+Run ```flask --app run db downgrade```    
+
+
 #### Running the Tests
 <div align="center">
 ★   RateRace — CITS3403 Project — 2026   ★
