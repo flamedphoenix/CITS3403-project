@@ -16,9 +16,7 @@ function startGame(mode = 'standard', date = null) {
   
   hide('daily-panel');
   const endpoint = mode === 'daily' ? `/api/game/daily?date=${date ? `${date}` : ''}` : '/api/game/questions';
-  if (mode === 'daily') {
-    fetch('/api/admin/maintain-cache').catch(() => {});
-  }
+  fetch('/api/game/maintain-cache').catch(() => {});
 
   console.log("Fetching movies from server...", endpoint);
   xhttp.open("GET", endpoint, true);

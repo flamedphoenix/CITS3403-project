@@ -283,10 +283,10 @@ def get_random_movie_batch(num_pairs=10):
 def game_questions():
     pairs = get_random_movie_batch(10)
     if not pairs:
-        return jsonify({'error': 'Not enough movies with distinct ratings'}), 500
+        return jsonify({'error': 'Not enough movies available with distinct ratings. Please wait while we fetch more...'}), 500
     return jsonify({'pairs': pairs})
 
-@main.route('/api/admin/maintain-cache')
+@main.route('/api/game/maintain-cache')
 @login_required
 def trigger_maintenance():
     maintain_movie_cache()
@@ -314,7 +314,8 @@ def game_daily():
     if not daily_entry:
         pairs = get_random_movie_batch(10)
         if not pairs:
-            return jsonify({'error': 'Database too small for daily mode'}), 500
+            return jsonify({'error': 'Not enough movies available. Please wait as we fetch some more...'}), 500
+
 
         new_set = DailyMovieSet(reset_date=target_date, movie_json=json.dumps(pairs))
         db.session.add(new_set)
