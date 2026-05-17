@@ -34,8 +34,8 @@ On the frontend, this application is built with HTML, Tailwind CSS, and JavaScri
 | UWA ID   | Name            | Github Username |
 |----------|-----------------|-----------------|
 | 24273259 | Kush Patel      | KushPatel-18    |
-|          | Dean Kalweit    | flamedphoenix   |
-|          | Roland Levinson | ggtroland       |
+| 24252883 | Dean Kalweit    | flamedphoenix   |
+| 23934799 | Roland Levinson | ggtroland       |
 
 ---
 ## Simple Launch Instructions
@@ -79,9 +79,9 @@ python3 -m unittest tests/test_game_api.py
 ```
 
 **System Tests**    
-Run ```python3 -m pytest tests/test_selenium.py``` if you want to see the test windows      
+Run ```python3 -m unittest tests/test_selenium.py``` if you want to see the test windows      
 or
-Run ```HEADLESS=1 python3 -m pytest tests/test_selenium.py``` if you don't want browser window      
+Run ```HEADLESS=1 python3 -m unittest tests/test_selenium.py``` if you don't want browser window      
 
 ---
 
