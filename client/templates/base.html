@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}RateRace{% endblock %}</title>
+    <!-- Tailwind output is generated from the frontend build step, so this should not be hand-edited. -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <!-- Child templates use this block for page-specific fonts, styles, and metadata. -->
   {% block extra_head %}{% endblock %}
 </head>
 <body class="min-h-screen bg-zinc-950 text-amber-50 flex flex-col">
+
+<!-- flex-col plus flex-1 on <main> keeps the footer at the bottom on short pages. -->
 
   <!-- Navbar -->
   <nav class="bg-black border-b-2 border-amber-400 px-6 py-4">
@@ -26,6 +30,7 @@
         <a href="{{ url_for('main.game') }}" class="text-zinc-400 hover:text-amber-400 transition">Play</a>
         <a href="{{ url_for('main.scoreboard') }}" class="text-zinc-400 hover:text-amber-400 transition">Leaderboard</a>
 
+        <!-- The navbar changes based on Flask-Login state instead of duplicating separate layouts. -->
         {% if current_user.is_authenticated %}
           <div class="flex items-center gap-3">
             <a href="{{ url_for('main.profile') }}" class="text-zinc-400 hover:text-amber-400 transition">{{ current_user.username }}</a>
@@ -70,6 +75,7 @@
   </div>
 
   <script>
+    // Keep the mobile menu self-contained so every page gets the same responsive nav.
     (function() {
       var toggle = document.getElementById('nav-toggle');
       var menu = document.getElementById('mobile-menu');
@@ -84,6 +90,7 @@
   </script>
 
   <!-- Flash messages -->
+  <!-- Routes can flash plain, success, or error messages; the category controls the colour. -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="max-w-6xl mx-auto w-full px-6 pt-4">
@@ -110,6 +117,7 @@
   </footer>
 
   {% if current_user.is_authenticated %}
+  <!-- Logged-in users keep the challenge listener on every page, not just the scoreboard. -->
   <!-- Challenge popup (available on every page) -->
   <div id="challenge-popup" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div class="bg-zinc-950 border-2 border-amber-400 shadow-retro p-8 text-center max-w-sm w-full mx-4"
@@ -141,12 +149,14 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script>
+    // Expose only the small amount of user data needed by global.js for Socket.IO events.
     const GLOBAL_USER_ID = {{ current_user.id | tojson }};
     const GLOBAL_USERNAME = {{ current_user.username | tojson }};
   </script>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
   {% endif %}
 
+  <!-- Page-specific JavaScript is loaded after the shared layout and global challenge code. -->
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>
