@@ -108,13 +108,21 @@ class RateRaceSeleniumTests(unittest.TestCase):
         raise AssertionError(f"Could not connect to {base_url}. Start Flask first with: py run.py")
 
     def page_text(self) -> str:
-        for _ in range(3):
+        last_error = None
+
+        for attempt in range(3):
             try:
                 return self.driver.find_element(By.TAG_NAME, "body").text
-            except (StaleElementReferenceException, NoSuchElementException):
+            except (StaleElementReferenceException, NoSuchElementException) as exc:
+                last_error = exc
                 time.sleep(0.2)
 
-        return ""
+        self.fail(
+            "Could not read the page text after 3 attempts. "
+            "The page may still be loading, redirecting, or re-rendering.\n\n"
+            f"Current URL: {self.driver.current_url}\n"
+            f"Last Selenium error: {type(last_error).__name__}: {last_error}"
+        )
 
     def page_text_lower(self) -> str:
         return self.page_text().lower()
