@@ -2,6 +2,7 @@
 // Leaderboard
 // ---------------------------------------------------------------------------
 
+// Pull leaderboard data once on page load; the API already returns ranked rows.
 async function loadLeaderboard() {
   try {
     const res  = await fetch('/api/scores/leaderboard');
@@ -19,6 +20,7 @@ async function loadLeaderboard() {
   }
 }
 
+// Render all rows in one HTML update to avoid flicker while the table is rebuilding.
 function renderLeaderboard(entries) {
   const tbody = document.getElementById('leaderboard-body');
   if (!entries || !entries.length) {
@@ -32,6 +34,7 @@ function renderLeaderboard(entries) {
   }
 
   tbody.innerHTML = entries.map(row => {
+    // Highlight the current user and avoid showing a challenge button for themself.
     const isMe     = IS_AUTHENTICATED && row.username === CURRENT_USERNAME;
     const rowClass = isMe
       ? 'border-b border-zinc-700 bg-zinc-900'
@@ -39,6 +42,7 @@ function renderLeaderboard(entries) {
     const medal    = row.rank === 1 ? '🥇' : row.rank === 2 ? '🥈' : row.rank === 3 ? '🥉' : '';
 
     let challengeCell = '';
+    // Only logged-in users have a socket and can send challenges.
     if (IS_AUTHENTICATED) {
       challengeCell = isMe
         ? '<td class="px-5 py-4 text-zinc-600 text-xs uppercase tracking-widest">You</td>'
@@ -66,6 +70,7 @@ function renderLeaderboard(entries) {
       </tr>`;
   }).join('');
 
+  // Challenge buttons are created dynamically, so listeners are attached after rendering.
   document.querySelectorAll('.challenge-btn').forEach(btn => {
     btn.addEventListener('click', () =>
       sendChallenge(parseInt(btn.dataset.id))
@@ -73,6 +78,7 @@ function renderLeaderboard(entries) {
   });
 }
 
+// The summary cards reuse the same API payload instead of making another request.
 function populateUserStats(entries) {
   if (!IS_AUTHENTICATED || !entries) return;
   const me = entries.find(r => r.username === CURRENT_USERNAME);
@@ -89,6 +95,7 @@ loadLeaderboard();
 // Challenge — scoreboard-page specific
 // ---------------------------------------------------------------------------
 
+// Challenge requests go through the shared Socket.IO connection from global.js.
 function sendChallenge(opponentId) {
   if (!window.appSocket) return;
   window.appSocket.emit('send_challenge', { opponent_id: opponentId });

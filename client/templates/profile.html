@@ -3,6 +3,7 @@
 {% block title %}RateRace — Profile{% endblock %}
 
 {% block extra_head %}
+<!-- Profile stats are calculated in routes.py and passed in as the stats object. -->
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
 <style>
   body { font-family: 'Courier Prime', monospace; }
@@ -17,6 +18,7 @@
 
   <div class="max-w-5xl mx-auto">
 
+    <!-- Home link gives a quick exit without relying on browser back history. -->
     <a href="{{ url_for('main.index') }}"
        class="inline-block mb-8 text-amber-400 px-6 py-3 font-extrabold uppercase tracking-widest text-xs border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition shadow-retro">
       ← Home
@@ -35,6 +37,7 @@
     <div class="w-full max-w-sm mx-auto flex flex-col gap-10 text-center pb-12">
 
       <!-- Leaderboard Rank -->
+      <!-- A user with no games yet shows a friendly placeholder instead of a fake rank. -->
       <div class="border-2 border-amber-400 bg-black p-5 shadow-retro">
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Leaderboard Rank</p>
         <p class="text-amber-400 font-extrabold text-4xl">
@@ -59,6 +62,7 @@
       </div>
 
       <!-- Best Accuracy -->
+      <!-- This uses the best accuracy across all games, not only the highest-score game. -->
       <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Best Accuracy</p>
         <p class="text-amber-400 font-extrabold text-3xl">
@@ -115,6 +119,7 @@
       </div>
 
       <!-- Average Time Taken -->
+      <!-- Time values are rounded in the route so the template can stay simple. -->
       <div class="border-2 border-zinc-700 bg-black p-5 shadow-retro">
         <p class="text-zinc-500 uppercase tracking-widest text-xs mb-2">Average Time Taken</p>
         <p class="text-amber-400 font-extrabold text-3xl">
