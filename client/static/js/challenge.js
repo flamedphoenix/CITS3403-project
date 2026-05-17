@@ -1,7 +1,9 @@
+// Challenge timing mirrors the solo game so both modes feel consistent.
 const TOTAL_ROUNDS = 10;
 const ROUND_TIME = 10;
 const TIMER_INTERVAL_MS = 100;
 
+// Live challenge state is local display state; authoritative results come from the server.
 let state = {
   round: 0,
   picked: false,
@@ -12,6 +14,7 @@ let state = {
   opponent: null,
 };
 
+// Reuse the authenticated socket created in global.js.
 const socket = window.appSocket;
 
 // ---------------------------------------------------------------------------
@@ -21,6 +24,7 @@ const socket = window.appSocket;
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
+// These helpers let the same rendering code work for either challenger or opponent.
 function myKey()  { return state.challenger && state.challenger.user_id === CURRENT_USER_ID ? 'challenger' : 'opponent'; }
 function oppKey() { return myKey() === 'challenger' ? 'opponent' : 'challenger'; }
 
@@ -28,6 +32,7 @@ function oppKey() { return myKey() === 'challenger' ? 'opponent' : 'challenger';
 // SocketIO
 // ---------------------------------------------------------------------------
 
+// Join after the socket connects so the server can place this browser in the session room.
 function joinChallenge() {
   socket.emit('join_challenge', { session_id: SESSION_ID });
 }
@@ -37,6 +42,7 @@ if (socket.connected) {
   socket.on('connect', joinChallenge);
 }
 
+// The game begins only after both players have joined the room.
 socket.on('game_start', (data) => {
   state.pairs      = data.pairs;
   state.challenger = data.challenger;
@@ -56,6 +62,7 @@ socket.on('opponent_answered', () => {
   el.className = 'text-green-400 text-xs uppercase tracking-widest font-bold';
 });
 
+// Round results are calculated by the backend to keep both players synchronized.
 socket.on('round_result', (data) => {
   clearInterval(state.timer);
 
@@ -120,6 +127,7 @@ socket.on('round_result', (data) => {
   // game_over event handles the results screen when round === 10
 });
 
+// Final scores and winner come from the backend after round 10 resolves.
 socket.on('game_over', (data) => {
   clearInterval(state.timer);
   hide('screen-game');
@@ -153,6 +161,7 @@ socket.on('challenge_error', (data) => {
 // Game rendering
 // ---------------------------------------------------------------------------
 
+// Reset visible cards/status each round before enabling new choices.
 function loadRound() {
   state.picked = false;
 
@@ -195,6 +204,7 @@ function loadRound() {
   startTimer();
 }
 
+// Local timer keeps the UI moving; timeout is still reported to the server.
 function startTimer() {
   clearInterval(state.timer);
   state.roundTimeLeft = ROUND_TIME;
@@ -234,6 +244,7 @@ function updateTimerDisplay() {
   }
 }
 
+// Send the choice plus elapsed time so the backend can award speed points fairly.
 function pick(choice) {
   if (state.picked) return;
   state.picked = true;

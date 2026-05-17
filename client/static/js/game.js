@@ -1,7 +1,9 @@
+// Keep these values in one place so timer, scoring, and display stay in sync.
 const TOTAL_ROUNDS = 10;
 const ROUND_TIME = 10;
 const TIMER_INTERVAL_MS = 100;
 
+// state is reset at the start of every game; gameSeq prevents an old API response from overwriting a newer game.
 let state = {};
 let gameTimer = null;
 let gameSeq = 0;
@@ -9,6 +11,7 @@ let gameSeq = 0;
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
+// mode chooses between normal random questions and the daily shared set.
 function startGame(mode = 'standard', date = null) {
   clearInterval(gameTimer);
   const seq = ++gameSeq;
@@ -31,6 +34,7 @@ function startGame(mode = 'standard', date = null) {
         pass_date = response.today_date;
       }
 
+      // The backend sends only the movie pairs; the browser tracks round progress and local scoring.
       state = {
         round: 0,
         score: 0,
@@ -84,6 +88,7 @@ function toggleDailyPanel() {
   }
 }
 
+// Timer ticks frequently for a smooth bar, while display rounds up to whole seconds.
 function startTimer() {
   clearInterval(gameTimer);
 
@@ -151,6 +156,7 @@ function loadDailyHistory() {
     });
 }
 
+// Faster correct answers receive a larger bonus, encouraging quick decisions.
 function getTimeBonus(timeTakenThisRound) {
   if (timeTakenThisRound < 1) return 100;
   if (timeTakenThisRound < 2) return 90;
@@ -165,6 +171,7 @@ function getTimeBonus(timeTakenThisRound) {
   return 0;
 }
 
+// Timeout follows the same reveal flow as a wrong answer but adds the full round time.
 function handleTimeout() {
   if (state.picked) return;
 
@@ -201,6 +208,7 @@ function handleTimeout() {
   }, 2000);
 }
 
+// Reset every card and feedback element so styles/click handlers do not leak between rounds.
 function loadRound() {
   const [movieA, movieB] = state.pairs[state.round];
   state.picked = false;
@@ -227,6 +235,7 @@ function loadRound() {
   const posterB = document.getElementById('poster-b');
   posterA.src = movieA.poster_url;
   posterB.src = movieB.poster_url;
+  // Fall back to a local image if TMDB poster URLs fail to load.
   posterA.onerror = () => { posterA.src = '/static/img/no-poster.png'; };
   posterB.onerror = () => { posterB.src = '/static/img/no-poster.png'; };
   
@@ -240,6 +249,7 @@ function loadRound() {
   startTimer();
 }
 
+// Handles a player choice, reveals both ratings, then delays briefly before the next round.
 function pick(choice) {
   if (state.picked) return;
   state.picked = true;
@@ -314,6 +324,7 @@ function nextRound() {
   }
 }
 
+// Results are shown before the POST finishes so the page feels responsive.
 function endGame() {
   clearInterval(gameTimer);
 
@@ -330,6 +341,7 @@ function endGame() {
   
   submitScore(state.score, state.correct, Number(formattedTimeTaken), state.mode, state.date);
 
+  // Save the completed game so leaderboard/profile pages can include it.
   async function submitScore(score, correctAnswers, timeTaken, mode, gameDate) {
     try {
       const response = await fetch('/api/game/submit', {

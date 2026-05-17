@@ -3,12 +3,14 @@
 {% block title %}RateRace — Log In{% endblock %}
 
 {% block content %}
+<!-- The form fields come from Flask-WTF, which also provides CSRF protection. -->
 <section class="py-20 px-6 flex justify-center">
   <div class="w-full max-w-sm">
 
     <h2 class="text-2xl font-extrabold uppercase tracking-widest text-amber-50 mb-8 text-center">Log In</h2>
     
     <!-- Flash Message Display -->
+    <!-- Login failures are shown here after the route redirects back to this page. -->
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         {% for message in messages %}
@@ -20,6 +22,7 @@
     <!-- Form -->
       <form method="POST" action="" class="flex flex-col gap-4">
         {{ form.hidden_tag() }}
+      <!-- hidden_tag includes the CSRF token required for POST requests. -->
 
       <div>
         {{ form.username.label(class="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1") }}

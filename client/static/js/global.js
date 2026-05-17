@@ -1,8 +1,11 @@
+// One shared socket is attached to window so page-specific scripts can reuse it.
 window.appSocket = io();
 
+// pendingSession stores the challenge being shown in the popup until the user responds.
 let pendingSession  = null;
 let popdownInterval = null;
 
+// Global toasts are for challenge feedback that can happen on any authenticated page.
 function showGlobalToast(message, isError = false) {
   const toast = document.getElementById('global-toast');
   const text  = document.getElementById('global-toast-text');
@@ -14,6 +17,7 @@ function showGlobalToast(message, isError = false) {
   setTimeout(() => toast.classList.add('hidden'), 4000);
 }
 
+// The popup auto-declines so pending challenges do not stay open forever.
 function showPopup(sessionId) {
   let seconds = 30;
   document.getElementById('popup-countdown').textContent = seconds;
@@ -35,6 +39,7 @@ function hidePopup() {
   document.getElementById('challenge-popup').classList.add('hidden');
 }
 
+// Incoming server events control the popup and redirect flow.
 window.appSocket.on('challenge_received', (data) => {
   pendingSession = data.session_id;
   document.getElementById('popup-title').textContent = data.challenger_name.toUpperCase();
@@ -49,6 +54,7 @@ window.appSocket.on('challenge_declined', (data) => {
   showGlobalToast(`${data.opponent_name} declined your challenge.`, true);
 });
 
+// Button handlers emit the user's decision back to challenge.py.
 document.getElementById('btn-accept').addEventListener('click', () => {
   if (pendingSession === null) return;
   window.appSocket.emit('accept_challenge', { session_id: pendingSession });
