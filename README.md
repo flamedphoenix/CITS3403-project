@@ -110,7 +110,7 @@ or
 To begin playing, sign up or log in. Click **Sign Up** in the navbar or the **"Sign Up Free"** button on the landing page.        
 Once logged in, click **Play Now** to go to the Game page. You must play at least one game to appear on the leaderboard.        
 
-### Game Start Screen — *Game Start Screen with Daily Game History Panel*
+### Game Start Screen — *[Game Start Screen with Daily Game History Panel](#standard-game-pages)*
 
 Three buttons are shown: **Start Game**, **Daily Challenge**, and a dropdown arrow for the daily history panel.
 
@@ -118,7 +118,7 @@ Three buttons are shown: **Start Game**, **Daily Challenge**, and a dropdown arr
 - Clicking any entry starts that day's daily game with the appropriate UI label.
 - Clicking **Daily Challenge** or today's gold entry starts today's daily game.
 
-### Playing a Game — *Standard Game Screen* and *Daily Challenge*
+### Playing a Game —  *[Standard Game Screen](#standard-game-pages)* and *[Daily Challenge](#daily-challenge)*
 
 You are shown two movie cards. Click the one you think has the higher IMDb rating. A timer counts down for each round so answer before it expires. At the end you'll see a score summary and can play again or view the leaderboard.
 
@@ -129,7 +129,7 @@ You are shown two movie cards. Click the one you think has the higher IMDb ratin
 - The recipient sees a popup to accept or decline with no page reload.
 - On accept, a challenge game starts immediately.
 
-### Challenge Game — *Challenge Game*
+### Challenge Game — *[Challenge Game](#leaderboard-pages)*
 
 Similar to other game modes, but:
 
@@ -156,11 +156,16 @@ Similar to other game modes, but:
 |---------------------------------------------------------------------------------------------------------------------------------------------|
 |<img width="1466" height="766" alt="Daily-Challenge" src="https://github.com/user-attachments/assets/75e331d9-8b5d-4758-8c0e-b68b72124dda" />|
 
+<a id="user-profile"></a>
+
 <details>
 <summary><h3><strong>Click to See User Profile Page</strong></h3></summary>
     
 ![User Profile Page](https://github.com/user-attachments/assets/7962836c-394e-42b0-9222-4006b05a338a)
 </details>
+
+<a id="index-page"></a>
+
 <details>
 <summary><h3><strong>Click to See Home / Index Page</strong></h3></summary>
     
