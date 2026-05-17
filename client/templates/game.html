@@ -29,17 +29,49 @@
       <span class="text-amber-400">★</span>
       <span>Beat the Clock</span>
     </div>
-    <div class="flex justify-center" style="margin-top: 2.5rem;">
+    <div class="flex justify-center gap-4 flex-wrap" style="margin-top: 2.5rem;">
       <button onclick="startGame()"
         style="padding: 1rem 3.5rem 1rem 2.5rem;"
         class="flex items-center justify-center gap-3 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-sm hover:bg-amber-300 transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 shadow-retro">
         <span>▶</span><span>Start Game</span>
       </button>
+
+      <div class="flex shadow-retro">
+        <button onclick="startGame('daily')"
+          style="padding: 1rem 2.5rem;"
+          class="flex items-center justify-center gap-3 text-amber-400 font-extrabold uppercase tracking-widest text-sm border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition "> <!-- shadow-retro-->
+          <span>Daily Challenge</span>
+        </button>
+        <button onclick="toggleDailyPanel()"
+          style="padding: 1rem 0.5rem;"
+          class="flex items-center justify-center text-amber-400 font-extrabold text-sm border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition"><!-- shadow-retro-->
+          <span id="daily-toggle-arrow">▶</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily panel — hidden by default -->
+  <div id="daily-panel" class="hidden mt-8 w-full border-2 border-zinc-700 bg-black shadow-retro" style="max-width: 480px; margin-left: auto; margin-right: auto;">
+    <div class="border-b-2 border-zinc-700 py-3">
+      <p class="text-amber-400 uppercase tracking-widest text-xs text-center font-bold">★ &nbsp; Previous Daily Games &nbsp; ★</p>
+    </div>
+    <div id="daily-history-list" class="max-h-64 overflow-y-auto">
+      <p class="text-zinc-500 text-xs px-5 py-4 uppercase tracking-widest">Loading...</p>
     </div>
   </div>
 
   <!-- GAME SCREEN -->
   <div id="screen-game" class="hidden w-full max-w-sm sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
+
+    <!-- Mode Header -->
+    <div class="text-center mb-5">
+      <h2 id="mode-title" class="font-extrabold text-amber-50 uppercase tracking-tight text-shadow-retro" style="font-size: 2.5rem; line-height: 1;">
+      </h2>
+      <p id="mode-subtitle" class="text-amber-400 uppercase tracking-widest text-sm font-bold mt-1">
+      </p>
+    </div>
+
 
     <!-- Timer Bar -->
     <div class="w-full bg-zinc-800 border-2 border-zinc-700 mb-5">
@@ -154,8 +186,11 @@
 
     <div class="flex justify-center gap-4 flex-wrap">
       <button onclick="startGame()"
-        class="flex items-center justify-center gap-2 bg-amber-400 text-black px-8 py-3 font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 shadow-retro">
-        <span>▶</span><span>Play Again</span>
+
+      style="padding: 0.75rem 2.5rem 0.75rem 1.75rem;"
+      class="flex items-center justify-center gap-2 bg-amber-400 text-black px-8 py-3 font-extrabold uppercase tracking-widest text-xs hover:bg-amber-300 transition border-b-4 border-amber-600 shadow-retro">
+        <span>▶</span><span>Play Standard</span>
+
       </button>
       <a href="{{ url_for('main.scoreboard') }}"
         class="flex items-center justify-center gap-2 text-amber-400 font-extrabold uppercase tracking-widest text-xs px-8 py-3 border-2 border-amber-400 hover:bg-amber-400 hover:text-black transition shadow-retro">
