@@ -9,17 +9,27 @@ let gameSeq = 0;
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
-function startGame(mode = 'standard') {
+function startGame(mode = 'standard', date = null) {
   clearInterval(gameTimer);
   const seq = ++gameSeq;
-  const endpoint = mode === 'daily' ? '/api/game/daily' : '/api/game/questions';
   const xhttp = new XMLHttpRequest();
+  
+  hide('daily-panel');
+  const endpoint = mode === 'daily' ? `/api/game/daily?date=${date ? `${date}` : ''}` : '/api/game/questions';
+  fetch('/api/game/maintain-cache').catch(() => {});
+
+  console.log("Fetching movies from server...", endpoint);
   xhttp.open("GET", endpoint, true);
 
   xhttp.onload = function() {
     if (seq !== gameSeq) return;
     if (this.status === 200) {
       const response = JSON.parse(this.responseText);
+      
+      pass_date = response.date;
+      if (date == null && response.today_date != null) {
+        pass_date = response.today_date;
+      }
 
       state = {
         round: 0,
@@ -29,19 +39,49 @@ function startGame(mode = 'standard') {
         totalTimeTaken: 0,
         pairs: response.pairs,
         picked: false,
+        mode: mode,
+        date: pass_date || null,
       };
 
       hide('screen-start');
       hide('screen-results');
       show('screen-game');
 
+      const modeTitle = document.getElementById('mode-title');
+      const modeSub = document.getElementById('mode-subtitle');
+
+      if (mode === 'daily') {
+        const isToday = (date === null && pass_date !== null);
+        document.getElementById('mode-title').textContent = isToday ? "Today's RateRace" : 'Previous RateRace';
+        document.getElementById('mode-subtitle').textContent = `Daily — ${pass_date}`;
+      } else {
+        document.getElementById('mode-title').textContent = 'Standard Mode';
+        document.getElementById('mode-subtitle').innerHTML = '★ &nbsp; Beat the Clock &nbsp; ★';
+
+      }
+
       loadRound();
     } else {
-      alert("Failed to load movies. Ensure your database has enough entries!");
+      const err = JSON.parse(this.responseText);
+      alert(err.error || "Failed to load game.");
     }
   };
 
   xhttp.send();
+}
+
+function toggleDailyPanel() {
+  const panel = document.getElementById('daily-panel');
+  const arrow = document.getElementById('daily-toggle-arrow');
+
+  if (panel.classList.contains('hidden')) {
+    show('daily-panel');
+    arrow.textContent = '▼';
+    loadDailyHistory();
+  } else {
+    hide('daily-panel');
+    arrow.textContent = '▶';
+  }
 }
 
 function startTimer() {
@@ -77,6 +117,38 @@ function updateTimerDisplay() {
     bar.classList.replace('bg-red-500', 'bg-amber-400');
     timerNum.classList.replace('text-red-400', 'text-amber-400');
   }
+}
+
+
+function loadDailyHistory() {
+  fetch('/api/game/daily/history')
+    .then(r => r.json())
+    .then(data => {
+      const list = document.getElementById('daily-history-list');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      data.dates.forEach(entry => {
+        const btn = document.createElement('button');
+
+        if (entry.is_today) {          // today's daily
+          btn.className = 'w-full text-left px-4 py-2 bg-amber-400 text-black font-extrabold uppercase tracking-widest text-xs border-b border-amber-600 hover:bg-amber-300 transition flex justify-between items-center';
+          btn.innerHTML = `<span>★ Today's Daily</span>${entry.played ? `<span>${entry.score}pts · ${entry.correct}/10</span>` : '<span class="opacity-60">Not played</span>'}`;
+          btn.onclick = () => startGame('daily');
+        }
+        else if (entry.played) {      // past daily, already played
+          btn.className = 'w-full text-left px-4 py-2 bg-zinc-900 text-zinc-500 font-bold text-xs uppercase tracking-widest border-b border-zinc-800 flex justify-between items-center';
+          btn.innerHTML = `<span>${entry.label}</span><span>${entry.score}pts · ${entry.correct}/10</span>`;
+          btn.onclick = () => startGame('daily', entry.date);
+
+        } else {                      // past daily, not played
+          btn.className = 'w-full text-left px-4 py-2 bg-zinc-900 text-zinc-600 font-bold text-xs uppercase tracking-widest border-b border-zinc-800 hover:bg-zinc-800 transition flex justify-between items-center';
+          btn.innerHTML = `<span>${entry.label}</span><span class="text-zinc-700 text-xs">—</span>`;
+          btn.onclick = () => startGame('daily', entry.date);
+        }
+        list.appendChild(btn);
+      });
+    });
 }
 
 function getTimeBonus(timeTakenThisRound) {
@@ -256,9 +328,9 @@ function endGame() {
   document.getElementById('result-time').textContent = `${formattedTimeTaken}s`;
   document.getElementById('result-accuracy').textContent = `${accuracy}%`;
   
-  submitScore(state.score, state.correct, Number(formattedTimeTaken));
+  submitScore(state.score, state.correct, Number(formattedTimeTaken), state.mode, state.date);
 
-  async function submitScore(score, correctAnswers, timeTaken) {
+  async function submitScore(score, correctAnswers, timeTaken, mode, gameDate) {
     try {
       const response = await fetch('/api/game/submit', {
         method: 'POST',
@@ -269,6 +341,8 @@ function endGame() {
           score: score,
           correct_answers: correctAnswers,
           time_taken: timeTaken,
+          mode: mode || 'standard',
+          date: gameDate || null,
         }),
       });
 
