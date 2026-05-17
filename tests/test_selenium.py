@@ -39,7 +39,12 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 from selenium import webdriver
-from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    TimeoutException,
+    StaleElementReferenceException,
+    NoSuchElementException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
@@ -103,7 +108,13 @@ class RateRaceSeleniumTests(unittest.TestCase):
         raise AssertionError(f"Could not connect to {base_url}. Start Flask first with: py run.py")
 
     def page_text(self) -> str:
-        return self.driver.find_element(By.TAG_NAME, "body").text
+        for _ in range(3):
+            try:
+                return self.driver.find_element(By.TAG_NAME, "body").text
+            except (StaleElementReferenceException, NoSuchElementException):
+                time.sleep(0.2)
+
+        return ""
 
     def page_text_lower(self) -> str:
         return self.page_text().lower()
